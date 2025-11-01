@@ -1,40 +1,344 @@
-          this.classList.toggle('fa-eye-slash');
-        });
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Operasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .terminal {
+            background: rgba(0, 20, 0, 0.8);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 50px auto;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 0 20px #0f0;
+        }
+        
+        .prompt {
+            color: #0f0;
+            margin-bottom: 10px;
+        }
+        
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+        
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 3px solid #f00;
+            padding: 30px;
+            z-index: 10000;
+            box-shadow: 0 0 50px #f00;
+            display: none;
+        }
+        
+        .fake-windows {
+            position: fixed;
+            width: 300px;
+            background: #c0c0c0;
+            border: 2px solid #000;
+            z-index: 9999;
+        }
+        
+        .window-header {
+            background: #000080;
+            color: white;
+            padding: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    
+    <div class="terminal">
+        <div class="prompt">C:\WINDOWS\SYSTEM32&gt; Initializing security protocol...</div>
+        <div class="prompt" id="output"></div>
+        <div class="input-line">
+            <span class="prompt">C:\WINDOWS\SYSTEM32&gt; </span>
+            <span id="command" class="prompt"></span>
+            <span class="cursor">_</span>
+        </div>
+    </div>
 
-        // Login handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    <div class="popup" id="warningPopup">
+        <h2 style="color: #f00;">⚠ CRITICAL SYSTEM ERROR ⚠</h2>
+        <p style="color: white; margin: 15px 0;">UNAUTHORIZED EXIT ATTEMPT DETECTED</p>
+        <button onclick="closePopup()" style="padding: 10px 20px; background: #f00; color: white; border: none; cursor: pointer;">OK (Tidak Berfungsi)</button>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Matrix background effect
+        function createMatrix() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const matrixBg = document.getElementById('matrixBg');
+            matrixBg.appendChild(canvas);
             
-            const username = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const emailError = document.getElementById('emailError');
-            const passwordError = document.getElementById('passwordError');
-            const successMessage = document.getElementById('successMessage');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
             
-            emailError.style.display = 'none';
-            passwordError.style.display = 'none';
-            successMessage.style.display = 'none';
+            const chars = "01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+            const charArray = chars.split("");
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
             
-            let isValid = true;
-            
-            if (!username) {
-                emailError.style.display = 'block';
-                isValid = false;
+            for(let x = 0; x < columns; x++) {
+                drops[x] = 1;
             }
             
-            if (!password) {
-                passwordError.style.display = 'block';
-                isValid = false;
-            }
-            
-            if (isValid) {
-                if (username === ADMIN_ACCOUNT.username && password === ADMIN_ACCOUNT.password) {
-                    successMessage.style.display = 'block';
-                    setTimeout(() => {
-                        alert('👑 Mode Admin - Sistem tidak terkunci');
-                    }, 1000);
-                    return;
+            function draw() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "#0f0";
+                ctx.font = fontSize + "px arial";
+                
+                for(let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
                 }
+            }
+            
+            setInterval(draw, 35);
+        }
+
+        // Auto typing effect
+        const commands = [
+            "scanning_system...",
+            "firewall_activated...", 
+            "anti_tamper_enabled...",
+            "keyboard_lock_engaged...",
+            "mouse_trap_activated...",
+            "exit_blocker_running...",
+            "SYSTEM_LOCKED::TRUE"
+        ];
+
+        let commandIndex = 0;
+        let charIndex = 0;
+        const output = document.getElementById('output');
+        const commandElement = document.getElementById('command');
+
+        function typeCommand() {
+            if(commandIndex < commands.length) {
+                if(charIndex < commands[commandIndex].length) {
+                    commandElement.textContent += commands[commandIndex].charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeCommand, 50);
+                } else {
+                    output.innerHTML += `<div>C:\\WINDOWS\\SYSTEM32&gt; ${commands[commandIndex]}</div>`;
+                    commandElement.textContent = "";
+                    charIndex = 0;
+                    commandIndex++;
+                    setTimeout(typeCommand, 500);
+                }
+            } else {
+                // Start prank features after typing completes
+                startPrankMode();
+            }
+        }
+
+        // Enhanced prank features
+        function startPrankMode() {
+            const music = document.getElementById('bgMusic');
+            music.volume = 0.2;
+            document.body.click(); // Trigger music play
+            
+            // 1. Block all keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Show warning popup for escape attempts
+                if(e.key === 'Escape' || e.key === 'F12' || 
+                   (e.ctrlKey && e.key === 'w') || 
+                   (e.altKey && e.key === 'F4')) {
+                    showWarningPopup();
+                }
+                
+                return false;
+            }, true);
+
+            // 2. Disable right click
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showWarningPopup();
+                return false;
+            });
+
+            // 3. Prevent window/tab closing
+            window.onbeforeunload = function(e) {
+                e.preventDefault();
+                e.returnValue = '';
+                showWarningPopup();
+                return '';
+            };
+
+            // 4. Open new window if they try to close
+            window.addEventListener('beforeunload', function() {
+                window.open(location.href, '_self');
+            });
+
+            // 5. Disable back button
+            history.pushState(null, null, location.href);
+            window.onpopstate = function() {
+                history.pushState(null, null, location.href);
+                showWarningPopup();
+            };
+
+            // 6. Random popups
+            setInterval(showWarningPopup, 30000);
+            
+            // 7. Create fake windows
+            setInterval(createFakeWindow, 15000);
+            
+            // 8. Prevent focus loss
+            document.addEventListener('visibilitychange', function() {
+                if(document.hidden) {
+                    showWarningPopup();
+                }
+            });
+
+            // 9. Disable text selection
+            document.onselectstart = function() { return false; };
+            
+            // 10. Block drag/drop
+            document.ondragstart = function() { return false; };
+            document.ondrop = function() { return false; };
+        }
+
+        function showWarningPopup() {
+            const popup = document.getElementById('warningPopup');
+            popup.style.display = 'block';
+            
+            // Move popup randomly
+            setInterval(() => {
+                popup.style.left = Math.random() * 50 + 25 + '%';
+                popup.style.top = Math.random() * 50 + 25 + '%';
+            }, 1000);
+            
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 5000);
+        }
+
+        function closePopup() {
+            // This doesn't actually close the popup
+            showWarningPopup();
+        }
+
+        function createFakeWindow() {
+            const fakeWin = document.createElement('div');
+            fakeWin.className = 'fake-windows';
+            fakeWin.style.left = Math.random() * 70 + '%';
+            fakeWin.style.top = Math.random() * 70 + '%';
+            
+            fakeWin.innerHTML = `
+                <div class="window-header">System Alert</div>
+                <div style="padding: 10px; color: black;">
+                    <p>Critical error detected!</p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top: 10px;">Close</button>
+                </div>
+            `;
+            
+            document.body.appendChild(fakeWin);
+            
+            // Make window draggable
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            fakeWin.querySelector('.window-header').onmousedown = dragMouseDown;
+            
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+            
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                fakeWin.style.top = (fakeWin.offsetTop - pos2) + "px";
+                fakeWin.style.left = (fakeWin.offsetLeft - pos1) + "px";
+            }
+            
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrix();
+            setTimeout(typeCommand, 1000);
+            
+            // Fullscreen attempt
+            document.documentElement.requestFullscreen?.().catch(() => {});
+        });
+    </script>
+</body>
+</html>                }
                 
                 if (validAccounts[username] === password) {
                     successMessage.style.display = 'block';
