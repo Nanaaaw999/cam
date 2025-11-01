@@ -1,1320 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>System Security</title>
-    
-    <!-- Google Font - Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-            font-family: 'Poppins', sans-serif;
-            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
-            touch-action: none;
-            overscroll-behavior: none;
-        }
-        
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
-        }
-        
-        .form-container {
-            width: 90%;
-            max-width: 400px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .form-title {
-            color: white;
-            font-size: 2rem;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-        
-        .input-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-        
-        .input-group label {
-            display: block;
-            color: white;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .input-group input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .input-group input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        }
-        
-        .toggle-password {
-            position: absolute;
-            right: 15px;
-            top: 38px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .main-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-        
-        .main-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-        }
-        
-        .create-account-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .create-account-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-        
-        .success-message {
-            color: #4CAF50;
-            text-align: center;
-            margin-top: 1rem;
-            display: none;
-        }
-        
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .dashboard-page {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
-            z-index: 1000;
-        }
-        
-        .dashboard-container {
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .user-info {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1.5rem;
-        }
-        
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.8rem;
-            color: white;
-        }
-        
-        .warning-message {
-            background: rgba(255, 107, 107, 0.3);
-            border: 1px solid rgba(255, 107, 107, 0.5);
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .warning-text {
-            color: #ff6b6b;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        
-        .dashboard-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        /* Popup Styles */
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .popup {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(45deg, #ff6b6b, #ff4757);
-            padding: 2rem;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            min-width: 300px;
-            animation: popupBounce 0.5s ease;
-            box-shadow: 0 20px 40px rgba(255, 71, 87, 0.3);
-        }
-        
-        @keyframes popupBounce {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            70% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-        
-        .popup-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            animation: shake 0.5s ease infinite;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-5deg); }
-            75% { transform: rotate(5deg); }
-        }
-        
-        .popup-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .popup-message {
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
-        
-        .popup-btn {
-            background: white;
-            color: #ff4757;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .popup-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(255,255,255,0.3);
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 90%;
-            max-width: 400px;
-            animation: slideUp 0.4s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -40%);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .modal-title {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .accounts-list {
-            max-height: 200px;
-            overflow-y: auto;
-            margin: 1rem 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 1rem;
-        }
-        
-        .account-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.8rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .delete-btn {
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-        
-        .delete-btn:hover {
-            background: #ff3742;
-            transform: scale(1.05);
-        }
-        
-        .no-accounts {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-            font-style: italic;
-            padding: 1rem;
-        }
-        
-        .dev-info {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
-            border-radius: 20px;
-            color: white;
-            font-size: 12px;
-        }
-        
-        .dev-info a {
-            color: #0088cc;
-            text-decoration: none;
-        }
-
-        /* Fake System Dialog */
-        .system-dialog {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            z-index: 10000;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            min-width: 300px;
-            animation: dialogAppear 0.3s ease;
-        }
-        
-        @keyframes dialogAppear {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        
-        .dialog-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #333;
-        }
-        
-        .dialog-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 1.5rem;
-        }
-        
-        .dialog-btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .dialog-ok {
-            background: #007bff;
-            color: white;
-        }
-        
-        .dialog-cancel {
-            background: #6c757d;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <!-- Halaman Login -->
-    <div class="screen" id="loginScreen">
-        <div class="form-container">
-            <h1 class="form-title">Panel Login</h1>
-            
-            <form id="loginForm">
-                <div class="input-group">
-                    <label for="email">Username</label>
-                    <input type="text" id="email" placeholder="Masukkan username">
-                    <div class="error-message" id="emailError">Username harus diisi</div>
-                </div>
-                
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password">
-                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
-                    <div class="error-message" id="passwordError">Password harus diisi</div>
-                </div>
-                
-                <button type="submit" class="main-btn">Login</button>
-                
-                <div class="success-message" id="successMessage">
-                    <i class="fas fa-check-circle"></i> Login berhasil! Mengalihkan...
-                </div>
-
-                <button type="button" class="create-account-btn" id="openModalBtn">
-                    <i class="fas fa-plus-circle"></i> Buat Akun Baru
-                </button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Halaman Locked -->
-    <div class="dashboard-page" id="dashboardPage">
-        <div class="dashboard-container">
-            <div class="form-container">
-                <h1 class="form-title">System Locked 🔒</h1>
-                
-                <div class="user-info">
-                    <div class="info-item">
-                        <span>Username:</span>
-                        <span id="displayUsername">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>IP Address:</span>
-                        <span id="ipAddress">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>Device:</span>
-                        <span id="deviceInfo">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>Battery:</span>
-                        <span id="batteryInfo">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>Lock Time:</span>
-                        <span id="lockTime">-</span>
-                    </div>
-                </div>
-                
-                <div class="warning-message">
-                    <div class="warning-text">
-                        ⚠️ kalo mau keluar reboot cill 😹😹😹
-                    </div>
-                </div>
-                
-                <button class="dashboard-btn" id="unlockBtn">
-                    <i class="fas fa-lock-open"></i> Coba Unlock
-                </button>
-                
-                <button class="dashboard-btn" id="helpBtn">
-                    <i class="fas fa-question-circle"></i> Minta Bantuan
-                </button>
-
-                <button class="dashboard-btn" id="fakeRestartBtn" style="background: linear-gradient(45deg, #28a745, #20c997);">
-                    <i class="fas fa-power-off"></i> Restart System
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Popup Overlay -->
-    <div class="popup-overlay" id="popupOverlay">
-        <div class="popup" id="popup">
-            <div class="popup-icon">🚫</div>
-            <div class="popup-title" id="popupTitle">SYSTEM LOCKED!</div>
-            <div class="popup-message" id="popupMessage">Gabisa keluar cill! 😹</div>
-            <button class="popup-btn" id="popupClose">Coba Lagi</button>
-        </div>
-    </div>
-
-    <!-- Fake System Dialog -->
-    <div class="system-dialog" id="systemDialog">
-        <div class="dialog-title" id="dialogTitle">System Warning</div>
-        <div id="dialogMessage">Are you sure you want to exit?</div>
-        <div class="dialog-buttons">
-            <button class="dialog-btn dialog-ok" id="dialogOk">OK</button>
-            <button class="dialog-btn dialog-cancel" id="dialogCancel">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Modal Create Account -->
-    <div class="modal" id="createAccountModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Buat Akun Baru</h2>
-                <button class="close-btn" id="closeModalBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="input-group">
-                <label for="newUsername">Username</label>
-                <input type="text" id="newUsername" placeholder="Masukkan username baru">
-            </div>
-            
-            <div class="input-group">
-                <label for="newPassword">Password</label>
-                <input type="password" id="newPassword" placeholder="Masukkan password baru">
-            </div>
-            
-            <button class="main-btn" id="createAccountBtn">
-                <i class="fas fa-user-plus"></i> Buat Akun
-            </button>
-
-            <h3 style="color: white; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">Daftar Akun</h3>
-            <div class="accounts-list" id="accountsList">
-                <!-- Akun akan muncul di sini -->
-            <            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
-            touch-action: none;
-        }
-        
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
-        }
-        
-        .form-container {
-            width: 90%;
-            max-width: 400px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .form-title {
-            color: white;
-            font-size: 2rem;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-        
-        .input-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-        
-        .input-group label {
-            display: block;
-            color: white;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .input-group input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .input-group input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        }
-        
-        .toggle-password {
-            position: absolute;
-            right: 15px;
-            top: 38px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .main-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-        
-        .main-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-        }
-        
-        .create-account-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .create-account-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-        
-        .success-message {
-            color: #4CAF50;
-            text-align: center;
-            margin-top: 1rem;
-            display: none;
-        }
-        
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .dashboard-page {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: url('https://files.catbox.moe/cd074n.jpg') center/cover no-repeat;
-            z-index: 1000;
-        }
-        
-        .dashboard-container {
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .user-info {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1.5rem;
-        }
-        
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.8rem;
-            color: white;
-        }
-        
-        .warning-message {
-            background: rgba(255, 107, 107, 0.3);
-            border: 1px solid rgba(255, 107, 107, 0.5);
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .warning-text {
-            color: #ff6b6b;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        
-        .dashboard-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 90%;
-            max-width: 400px;
-            animation: slideUp 0.4s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -40%);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .modal-title {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .accounts-list {
-            max-height: 200px;
-            overflow-y: auto;
-            margin: 1rem 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 1rem;
-        }
-        
-        .account-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.8rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .delete-btn {
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-        
-        .delete-btn:hover {
-            background: #ff3742;
-            transform: scale(1.05);
-        }
-        
-        .no-accounts {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-            font-style: italic;
-            padding: 1rem;
-        }
-        
-        .dev-info {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
-            border-radius: 20px;
-            color: white;
-            font-size: 12px;
-        }
-        
-        .dev-info a {
-            color: #0088cc;
-            text-decoration: none;
-        }
-
-        /* Fake BSOD */
-        .bsod {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0000AA;
-            color: white;
-            font-family: 'Courier New', monospace;
-            z-index: 9999;
-            padding: 2rem;
-        }
-
-        .bsod-content {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .bsod h1 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .bsod p {
-            margin: 0.5rem 0;
-            line-height: 1.5;
-        }
-    </style>
-</head>
-<body>
-    <!-- Halaman Login -->
-    <div class="screen" id="loginScreen">
-        <div class="form-container">
-            <h1 class="form-title">Panel Login</h1>
-            
-            <form id="loginForm">
-                <div class="input-group">
-                    <label for="email">Username</label>
-                    <input type="text" id="email" placeholder="Masukkan username">
-                    <div class="error-message" id="emailError">Username harus diisi</div>
-                </div>
-                
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password">
-                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
-                    <div class="error-message" id="passwordError">Password harus diisi</div>
-                </div>
-                
-                <button type="submit" class="main-btn">Login</button>
-                
-                <div class="success-message" id="successMessage">
-                    <i class="fas fa-check-circle"></i> Login berhasil! Mengalihkan...
-                </div>
-
-                <button type="button" class="create-account-btn" id="openModalBtn">
-                    <i class="fas fa-plus-circle"></i> Buat Akun Baru
-                </button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Halaman Locked -->
-    <div class="dashboard-page" id="dashboardPage">
-        <div class="dashboard-container">
-            <div class="form-container">
-                <h1 class="form-title">System Locked 🔒</h1>
-                
-                <div class="user-info">
-                    <div class="info-item">
-                        <span>Username:</span>
-                        <span id="displayUsername">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>IP Address:</span>
-                        <span id="ipAddress">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>Device:</span>
-                        <span id="deviceInfo">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span>Lock Time:</span>
-                        <span id="lockTime">-</span>
-                    </div>
-                </div>
-                
-                <div class="warning-message">
-                    <div class="warning-text">
-                        ⚠️ kalo mau keluar reboot cill 😹😹😹
-                    </div>
-                </div>
-                
-                <button class="dashboard-btn" id="unlockBtn">
-                    <i class="fas fa-lock-open"></i> Coba Unlock
-                </button>
-                
-                <button class="dashboard-btn" id="helpBtn">
-                    <i class="fas fa-question-circle"></i> Minta Bantuan
-                </button>
-
-                <button class="dashboard-btn" id="fakeBsodBtn" style="background: linear-gradient(45deg, #ff4757, #ff3742);">
-                    <i class="fas fa-exclamation-triangle"></i> Emergency Restart
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fake BSOD Screen -->
-    <div class="bsod" id="bsodScreen">
-        <div class="bsod-content">
-            <h1>A problem has been detected and your system has been locked to prevent damage.</h1>
-            <p>CRITICAL_SYSTEM_LOCK</p>
-            <br>
-            <p>If this is the first time you've seen this error, restart your device.</p>
-            <p>If this screen appears again, follow these steps:</p>
-            <br>
-            <p>Check for any system updates. Make sure any new hardware or software is properly installed.</p>
-            <p>If problems continue, disable or remove any newly installed hardware or software.</p>
-            <br>
-            <p>Technical information:</p>
-            <p>*** STOP: 0x000000ED (0x00000000,0x00000000,0x00000000,0x00000000)</p>
-            <br>
-            <p>*** prank-system.sys - Address FFFFFFFF base at FFFFFFFF, DateStamp 00000000</p>
-            <br>
-            <p>Beginning dump of physical memory...</p>
-            <p>Physical memory dump complete.</p>
-            <p>Contact your system administrator or technical support group for further assistance.</p>
-        </div>
-    </div>
-
-    <!-- Modal Create Account -->
-    <div class="modal" id="createAccountModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Buat Akun Baru</h2>
-                <button class="close-btn" id="closeModalBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="input-group">
-                <label for="newUsername">Username</label>
-                <input type="text" id="newUsername" placeholder="Masukkan username baru">
-            </div>
-            
-            <div class="input-group">
-                <label for="newPassword">Password</label>
-                <input type="password" id="newPassword" placeholder="Masukkan password baru">
-            </div>
-            
-            <button class="main-btn" id="createAccountBtn">
-                <i class="fas fa-user-plus"></i> Buat Akun
-            </button>
-
-            <h3 style="color: white; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">Daftar Akun</h3>
-            <div class="accounts-list" id="accountsList">
-                <!-- Akun akan muncul di sini -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Developer Info -->
-    <div class="dev-info">
-        <a href="https://t.me/JhonNotDev" target="_blank">
-            <i class="fab fa-telegram"></i> @JhonNotDev
-        </a>
-    </div>
-    
-    <!-- Audio untuk prank -->
-    <audio id="alertSound" loop>
-        <source src="https://files.catbox.moe/ya1wgk.mp3" type="audio/mpeg">
-    </audio>
-
-    <script>
-        // Admin account
-        const ADMIN_ACCOUNT = {
-            username: "JhonNotDev",
-            password: "999"
-        };
-
-        // Load accounts dari localStorage
-        let validAccounts = JSON.parse(localStorage.getItem('prankAccounts')) || {
-            "Rezzy": "Rezzy001",
-            "admin": "admin123",
-            "user": "user123"
-        };
-
-        // Array pesan sarkas
-        const sarkasMessages = [
-            "GABISA DONG BOCAH! 😹",
-            "YAKALI BISA BEGITU AJA! 😹", 
-            "REBOOT AJA CILL! 😹",
-            "DASAR NOOB MAU KELUAR! 😹",
-            "OTAK LU DIMANA SIH? 😹",
-            "GAMPANGAN DARI GINI? 😹",
-            "CUMA REBOOT YANG BISA! 😹",
-            "TERIMA NASIB LU AJA! 😹",
-            "YAKALI GAMPANG BEGITU! 😹",
-            "DASAR TOLOL MAU KABUR! 😹"
-        ];
-
-        let isLocked = false;
-
-        // Modal functionality
-        const modal = document.getElementById('createAccountModal');
-        const openModalBtn = document.getElementById('openModalBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        openModalBtn.addEventListener('click', function() {
-            modal.style.display = 'block';
-            updateAccountsList();
-        });
-
-        closeModalBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // Update accounts list display
-        function updateAccountsList() {
-            const accountsList = document.getElementById('accountsList');
-            accountsList.innerHTML = '';
-            
-            const accounts = Object.keys(validAccounts);
-            
-            if (accounts.length === 0) {
-                accountsList.innerHTML = '<div class="no-accounts">Belum ada akun yang dibuat</div>';
-                return;
-            }
-            
-            accounts.forEach(username => {
-                if (username !== ADMIN_ACCOUNT.username) {
-                    const accountItem = document.createElement('div');
-                    accountItem.className = 'account-item';
-                    accountItem.innerHTML = `
-                        <div>
-                            <strong>${username}</strong>
-                            <div style="font-size: 0.8rem; opacity: 0.8;">Password: ${validAccounts[username]}</div>
-                        </div>
-                        <button class="delete-btn" onclick="deleteAccount('${username}')">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
-                    `;
-                    accountsList.appendChild(accountItem);
-                }
-            });
-        }
-
-        // Delete account
-        function deleteAccount(username) {
-            if (confirm(`Hapus akun ${username}?`)) {
-                delete validAccounts[username];
-                localStorage.setItem('prankAccounts', JSON.stringify(validAccounts));
-                updateAccountsList();
-            }
-        }
-
-        // Create new account
-        document.getElementById('createAccountBtn').addEventListener('click', function() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value.trim();
-            
-            if (username && password) {
-                if (validAccounts[username]) {
-                    alert('❌ Username sudah ada!');
-                    return;
-                }
-                
-                if (username === ADMIN_ACCOUNT.username) {
-                    alert('❌ Tidak bisa menggunakan username admin!');
-                    return;
-                }
-                
-                validAccounts[username] = password;
-                localStorage.setItem('prankAccounts', JSON.stringify(validAccounts));
-                
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newPassword').value = '';
-                
-                updateAccountsList();
-                alert(`✅ Akun ${username} berhasil dibuat!`);
-            } else {
-                alert('❌ Username dan password harus diisi!');
-            }
-        });
-
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const password = document.getElementById('password');
-            const type = password.type === 'password' ? 'text' : 'password';
-            password.type = type;
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
+          this.classList.toggle('fa-eye-slash');
         });
 
         // Login handler
@@ -1569,9 +253,250 @@
             }, 3000);
         });
 
-        // Initialize
+        // setTimeout
         window.addEventListener('load', function() {
             updateAccountsList();
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1531315630201-bb15abeb1653?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            border: 2px solid #ff0066;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ff0066;
+            text-shadow: 0 0 10px rgba(255, 0, 102, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .warning {
+            color: #ffcc00;
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin: 20px 0;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        #closeBtn {
+            background-color: #ff0066;
+            color: white;
+        }
+        
+        #closeBtn:hover {
+            background-color: #cc0052;
+            transform: scale(1.05);
+        }
+        
+        #fakeBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #fakeBtn:hover {
+            background-color: #3d8b40;
+            transform: scale(1.05);
+        }
+        
+        .countdown {
+            font-size: 1.5rem;
+            margin-top: 20px;
+            color: #ffcc00;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, 15px); }
+            100% { transform: translate(0, -0px); }
+        }
+        
+        /* Fullscreen overlay untuk mencegah interaksi */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay"></div>
+    
+    <div class="container floating">
+        <h1>Website Terkunci!</h1>
+        <p>Selamat datang di website kami. Sayangnya, Anda tidak bisa keluar dari sini dengan cara biasa.</p>
+        
+        <div class="warning">
+            ⚠ PERINGATAN: Website ini telah dikunci! ⚠
+        </div>
+        
+        <p>Semua metode untuk menutup browser telah dinonaktifkan. Tombol close tidak akan berfungsi, keyboard shortcut diblokir, dan klik di luar juga tidak bekerja.</p>
+        
+        <div class="countdown" id="countdown">
+            Waktu tersisa: <span id="timer">05:00</span>
+        </div>
+        
+        <div class="button-container">
+            <button id="closeBtn">Coba Tutup Browser</button>
+            <button id="fakeBtn">Tombol Bantuan (Palsu)</button>
+        </div>
+        
+        <div class="footer">
+            Website ini hanya untuk hiburan. Jangan khawatir, restart browser akan membebaskan Anda.
+        </div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung elemen audio.
+    </audio>
+
+    <script>
+        // Memutar musik background
+        document.addEventListener('DOMContentLoaded', function() {
+            const music = document.getElementById('bgMusic');
+            music.volume = 0.3;
+            
+            // Coba putar musik dengan interaksi pengguna
+            document.body.addEventListener('click', function() {
+                music.play().catch(e => console.log("Autoplay diblokir, perlu interaksi pengguna"));
+            }, { once: true });
+            
+            // Timer countdown
+            let timeLeft = 300; // 5 menit dalam detik
+            const timerElement = document.getElementById('timer');
+            
+            const countdown = setInterval(function() {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    timerElement.textContent = "Waktu Habis!";
+                }
+            }, 1000);
+            
+            // Tombol close palsu
+            document.getElementById('closeBtn').addEventListener('click', function() {
+                alert("Maaf, tombol close tidak berfungsi! Coba cara lain.");
+            });
+            
+            // Tombol bantuan palsu
+            document.getElementById('fakeBtn').addEventListener('click', function() {
+                alert("Bantuan sedang datang... (hanya bercanda, tidak ada bantuan!)");
+            });
+            
+            // Mencegah konteks menu (klik kanan)
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                alert("Menu konteks dinonaktifkan!");
+            });
+            
+            // Mencegah pintasan keyboard
+            document.addEventListener('keydown', function(e) {
+                // Blokir F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+W, Alt+F4, dll.
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                    (e.ctrlKey && e.key === 'U') ||
+                    (e.ctrlKey && e.key === 'w') ||
+                    (e.altKey && e.key === 'F4')
+                ) {
+                    e.preventDefault();
+                    alert("Pintasan keyboard diblokir!");
+                }
+            });
+            
+            // Mencegah keluar dari halaman
+            window.onbeforeunload = function() {
+                return "Anda yakin ingin meninggalkan halaman ini? Semua progress akan hilang!";
+            };
+            
+            // Membuka jendela baru jika mencoba menutup
+            window.addEventListener('beforeunload', function(e) {
+                e.preventDefault();
+                e.returnValue = '';
+            });
         });
     </script>
 </body>
