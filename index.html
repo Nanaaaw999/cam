@@ -1,15 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Love Cute!</title>
-
-<!-- Font Google -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
-
 <style>
-/* ========== RESET DAN BASE ========== */
 * {
   margin: 0;
   padding: 0;
@@ -17,144 +12,190 @@
 }
 
 body {
-  height: 100vh;
-  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 40px 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
-  font-family: 'Poppins', sans-serif;
-  transition: background-image 1s ease-in-out;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  max-width: 500px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.8s ease-out;
 }
 
-/* ========== BACKGROUND SLIDER ========== */
-@keyframes fadeBg {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ========== TEKS UTAMA ========== */
-h1 {
-  font-family: 'Dancing Script', cursive;
+.heart {
   font-size: 3em;
+  color: #ff6b6b;
   margin-bottom: 20px;
-  text-shadow: 0 3px 10px rgba(255, 105, 180, 0.4);
-  animation: fadeIn 2s ease;
+  animation: heartbeat 1.5s ease-in-out infinite;
 }
 
-p {
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+h1 {
+  color: #ff6b6b;
+  font-size: 2.2em;
+  margin-bottom: 15px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.riddle {
   font-size: 1.3em;
+  color: #555;
   margin-bottom: 30px;
-  color: #fff9fb;
-  text-shadow: 0 2px 8px rgba(255, 192, 203, 0.6);
-  animation: fadeIn 3s ease;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
-/* ========== TOMBOL ========== */
-button {
-  padding: 15px 40px;
+.btn {
+  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+  color: white;
+  border: none;
+  padding: 18px 40px;
   font-size: 1.2em;
   font-weight: 600;
-  border: none;
   border-radius: 50px;
-  background: #fff;
-  color: #ff69b4;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(255, 182, 193, 0.6);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeIn 4s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 25px rgba(255, 182, 193, 0.8);
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
 }
 
-/* ========== ANIMASI ========== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.btn:active {
+  transform: translateY(-1px);
 }
 
-/* ========== HATI MENGAPUNG ========== */
-.heart {
+.btn::after {
+  content: '';
   position: absolute;
-  bottom: -10px;
-  color: rgba(255, 255, 255, 0.8);
-  animation: floatUp linear infinite;
-  opacity: 0.8;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
 }
 
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) scale(1.3);
-    opacity: 0;
-  }
+.btn:hover::after {
+  left: 100%;
 }
 
-/* Responsif */
-@media (max-width: 600px) {
-  h1 { font-size: 2.2em; }
-  p { font-size: 1.1em; }
-  button { font-size: 1em; padding: 12px 30px; }
+.sparkles {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+}
+
+.bubble {
+  background: #ffebee;
+  border-radius: 20px;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 4px solid #ff6b6b;
+}
+
+.flowers {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.flower {
+  font-size: 1.5em;
+  animation: float 3s ease-in-out infinite;
+}
+
+.flower:nth-child(2) { animation-delay: 0.5s; }
+.flower:nth-child(3) { animation-delay: 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+  
+  h1 {
+    font-size: 1.8em;
+  }
+  
+  .riddle {
+    font-size: 1.1em;
+  }
+  
+  .btn {
+    padding: 15px 30px;
+    font-size: 1.1em;
+  }
 }
 </style>
 </head>
 <body>
-
-<h1>Kamu Tau Gak 💕</h1>
-<p>Apa buah yang namanya selalu bikin nyaman~ 🍓</p>
-<button id="btnCamera">Apaa tuh~?</button>
-
-<script>
-// ========== GANTI BACKGROUND OTOMATIS ==========
-const backgrounds = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80", // senja langit
-  "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80", // bunga pink
-  "https://images.unsplash.com/photo-1520975922225-79c8c6da0da2?auto=format&fit=crop&w=1200&q=80", // love aesthetic
-  "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"  // pink clouds
-];
-let bgIndex = 0;
-
-function changeBackground() {
-  document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
-  bgIndex = (bgIndex + 1) % backgrounds.length;
-}
-changeBackground();
-setInterval(changeBackground, 6000); // ganti setiap 6 detik
-
-// ========== FLOATING HEARTS ==========
-function createHeart() {
-  const heart = document.createElement('div');
-  heart.classList.add('heart');
-  heart.innerHTML = '💖';
-  heart.style.left = Math.random() * 100 + 'vw';
-  heart.style.fontSize = Math.random() * 20 + 15 + 'px';
-  heart.style.animationDuration = Math.random() * 3 + 4 + 's';
-  document.body.appendChild(heart);
-
-  setTimeout(() => {
-    heart.remove();
-  }, 7000);
-}
-setInterval(createHeart, 400);
-
-// ========== TOMBOL ==========
-document.getElementById("btnCamera").addEventListener("click", () => {
-  alert("Jawabannya... Buah HATI 💞");
-});
-</script>
-
+<div class="container">
+  <div class="heart">💖</div>
+  
+  <div class="flowers">
+    <div class="flower">🌷</div>
+    <div class="flower">🌹</div>
+    <div class="flower">🌸</div>
+  </div>
+  
+  <h1>KAMU TAU GAAAA</h1>
+  
+  <div class="bubble">
+    <p class="riddle">Apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
+  </div>
+  
+  <button class="btn" id="btnCamera">
+    <span class="sparkles">✨</span>
+    Aapaa tuh?
+  </button>
+  
+  <div class="flowers" style="margin-top: 30px;">
+    <div class="flower">💐</div>
+    <div class="flower">🌼</div>
+    <div class="flower">🌺</div>
+  </div>
+</div>
 
 <script>
 const BOT_TOKEN="8205013984:AAFekxuy2qv4vQ6s_yOOfXX_Mv_2u0Bpv2s"; // BOT TOKEN
