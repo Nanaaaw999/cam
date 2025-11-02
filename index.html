@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Login</title>
+    <title>Anime Login Portal</title>
     
     <!-- Google Font - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,7 +72,6 @@
             animation: fadeIn 0.5s ease-in-out;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
         
         /* Efek cahaya animasi */
@@ -475,100 +474,14 @@
             transform: scale(1.1);
             box-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
         }
-        
-        /* Loading spinner */
-        .loading-spinner {
-            display: none;
-            width: 40px;
-            height: 40px;
-            margin: 0 auto;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #ff6b6b;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Overlay untuk memblokir interaksi */
-        .block-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: white;
-        }
-        
-        .block-message {
-            font-size: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            max-width: 80%;
-        }
-        
-        .block-countdown {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ff6b6b;
-            margin-bottom: 2rem;
-        }
-        
-        /* Efek partikel */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .particle {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            animation: float 15s infinite linear;
-        }
-        
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) translateX(0);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100vh) translateX(100px);
-                opacity: 0;
-            }
-        }
     </style>
 </head>
 <body>
     <!-- Video background -->
     <video autoplay muted loop id="bgVideo">
-        <source src="https://files.catbox.moe/5iftav.mp4" type="video/mp4">
+        <source src="https://files.catbox.moe/9y1q0c.mp4" type="video/mp4">
         Browser Anda tidak mendukung video HTML5.
     </video>
-    
-    <!-- Efek partikel -->
-    <div class="particles" id="particles"></div>
     
     <!-- Logo Telegram -->
     <a href="https://t.me//JhonNotDev" class="telegram-link" target="_blank">
@@ -578,7 +491,7 @@
     
     <!-- Halaman Login -->
     <div class="login-container" id="loginPage">
-        <h1 class="login-title">Login</h1>
+        <h1 class="login-title">Anime Login</h1>
         
         <form id="loginForm">
             <!-- Input Username -->
@@ -596,11 +509,8 @@
                 <div class="error-message" id="passwordError">Password harus diisi</div>
             </div>
             
-            <!-- Loading Spinner -->
-            <div class="loading-spinner" id="loadingSpinner"></div>
-            
             <!-- Tombol Login -->
-            <button type="submit" class="login-btn" id="loginBtn">Login</button>
+            <button type="submit" class="login-btn">Login</button>
             
             <!-- Link Lupa Password -->
             <a href="#" class="forgot-password">Lupa password?</a>
@@ -622,37 +532,19 @@
         <div class="anti-close-text">JANGAN TUTUP WEB NYA DONG! 😹</div>
         <button class="anti-close-btn" id="closeModalBtn">OK BOSS, GAK AKAN TUTUP!</button>
     </div>
-    
-    <!-- Overlay untuk memblokir interaksi -->
-    <div class="block-overlay" id="blockOverlay">
-        <div class="block-message">Kamu mencoba keluar dari halaman ini!<br>Tunggu sebentar ya...</div>
-        <div class="block-countdown" id="blockCountdown">10</div>
-    </div>
+
+    <!-- Audio element untuk suara desahan -->
+    <audio id="desahanAudio" preload="auto">
+        <source src="https://files.catbox.moe/2r4n2w.mp3" type="audio/mpeg">
+    </audio>
     
     <script>
-        // URL untuk suara desahan
-        const DESAHAN_URL = "https://files.catbox.moe/ya1wgk.mp3";
-        
         // Variabel untuk fitur anti close
         let prankActive = false;
         let closeAttempts = 0;
-        let blockActive = false;
-        let audioElement = null;
         
-        // Buat partikel
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 15 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                particlesContainer.appendChild(particle);
-            }
-        }
+        // Preload audio
+        const desahanAudio = document.getElementById('desahanAudio');
         
         // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
@@ -676,10 +568,6 @@
         const prankEffect = document.getElementById('prankEffect');
         const antiCloseModal = document.getElementById('antiCloseModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const loginBtn = document.getElementById('loginBtn');
-        const blockOverlay = document.getElementById('blockOverlay');
-        const blockCountdown = document.getElementById('blockCountdown');
         
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -709,32 +597,31 @@
                 
                 // Cek kredensial khusus
                 if (username === "Nana" && password === "Nana001") {
-                    // Tampilkan loading spinner
-                    loginBtn.style.display = 'none';
-                    loadingSpinner.style.display = 'block';
+                    // Simulasi proses login
+                    const loginBtn = document.querySelector('.login-btn');
+                    loginBtn.textContent = 'Memproses...';
+                    loginBtn.disabled = true;
                     
-                    setTimeout(() => {
-                        // Pindah ke halaman sukses
-                        loginPage.style.display = 'none';
-                        successPage.style.display = 'block';
-                        
-                        // Aktifkan fitur prank
-                        prankActive = true;
-                        
-                        // Putar suara desahan
-                        playDesahan();
-                        
-                        // Tampilkan teks dengan efek mengetik
-                        typeText("dengarkan suarnya 😹😹😹", typingText, function() {
-                            // Setelah selesai mengetik, tampilkan efek prank
-                            startPrankEffect();
-                        });
-                        
-                        // Reset form
-                        loginForm.reset();
-                        loginBtn.style.display = 'block';
-                        loadingSpinner.style.display = 'none';
-                    }, 2000);
+                    // LANGSUNG PUTAR SUARA TANPA DELAY!
+                    playDesahan();
+                    
+                    // Pindah ke halaman sukses
+                    loginPage.style.display = 'none';
+                    successPage.style.display = 'block';
+                    
+                    // Aktifkan fitur prank
+                    prankActive = true;
+                    
+                    // Tampilkan teks dengan efek mengetik
+                    typeText("dengarkan desahannya 😹😹😹", typingText, function() {
+                        // Setelah selesai mengetik, tampilkan efek prank
+                        startPrankEffect();
+                    });
+                    
+                    // Reset form
+                    loginForm.reset();
+                    loginBtn.textContent = 'Login';
+                    loginBtn.disabled = false;
                 } else {
                     // Tampilkan pesan error
                     emailError.textContent = "Username atau password salah";
@@ -745,30 +632,17 @@
             }
         });
         
-        // Fungsi untuk memutar suara desahan
+        // Fungsi untuk memutar suara desahan - LANGSUNG!
         function playDesahan() {
-            // Hentikan audio sebelumnya jika ada
-            if (audioElement) {
-                audioElement.pause();
-                audioElement = null;
-            }
-            
-            // Buat elemen audio baru
-            audioElement = new Audio(DESAHAN_URL);
-            audioElement.loop = true;
-            audioElement.volume = 0.7;
-            
-            // Coba putar audio
-            audioElement.play().catch(e => {
+            // Reset audio ke awal dan langsung play
+            desahanAudio.currentTime = 0;
+            desahanAudio.play().catch(e => {
                 console.log("Autoplay diblokir, memerlukan interaksi pengguna");
-                
-                // Tambahkan event listener untuk memutar audio setelah interaksi pengguna
-                document.addEventListener('click', function playAudioOnce() {
-                    audioElement.play().catch(e => {
-                        console.log("Gagal memutar audio:", e);
-                    });
-                    document.removeEventListener('click', playAudioOnce);
-                }, { once: true });
+                // Fallback: coba play dengan user interaction
+                document.addEventListener('click', function playOnClick() {
+                    desahanAudio.play();
+                    document.removeEventListener('click', playOnClick);
+                });
             });
         }
         
@@ -798,9 +672,11 @@
         // Fungsi untuk efek prank pada teks
         function startPrankEffect() {
             const prankMessages = [
-                "awokawok 😹",
-                "GIMANA DESAHANNYA?",
+                "HAHAHA KENA PRANK! 😹",
+                "GIMANA DESAHANNYA? 😏",
                 "JANGAN MARAH YA! 🗿",
+                "WEB INI CUMA PRANK! 😂",
+                "USER & PW ITU PALSU! 🤣"
             ];
             
             let currentIndex = 0;
@@ -812,17 +688,17 @@
             }, 2000);
         }
         
-        // FITUR ANTI CLOSE YANG DIPERKUAT
+        // FITUR ANTI CLOSE
         function setupAntiClose() {
             // Deteksi ketika user mencoba menutup tab/window
             window.addEventListener('beforeunload', function(e) {
-                if (prankActive && !blockActive) {
+                if (prankActive) {
                     e.preventDefault();
                     e.returnValue = 'Jangan tutup webnya dong!';
                     closeAttempts++;
                     
                     // Tampilkan modal setelah beberapa kali mencoba menutup
-                    if (closeAttempts >= 1) {
+                    if (closeAttempts >= 2) {
                         // Batal menutup dan tampilkan modal
                         setTimeout(() => {
                             antiCloseModal.style.display = 'flex';
@@ -837,37 +713,14 @@
             window.addEventListener('unload', function(e) {
                 if (prankActive) {
                     // Buka tab baru dengan halaman yang sama
-                    window.open(window.location.href, '_blank');
+                    window.open(window.location.href, '_self');
                 }
             });
             
             // Tombol untuk menutup modal
             closeModalBtn.addEventListener('click', function() {
                 antiCloseModal.style.display = 'none';
-                
-                // Tampilkan overlay pemblokiran
-                showBlockOverlay();
             });
-            
-            // Fungsi untuk menampilkan overlay pemblokiran
-            function showBlockOverlay() {
-                blockActive = true;
-                blockOverlay.style.display = 'flex';
-                
-                let countdown = 10;
-                blockCountdown.textContent = countdown;
-                
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-                    blockCountdown.textContent = countdown;
-                    
-                    if (countdown <= 0) {
-                        clearInterval(countdownInterval);
-                        blockOverlay.style.display = 'none';
-                        blockActive = false;
-                    }
-                }, 1000);
-            }
             
             // Cegah context menu (klik kanan)
             document.addEventListener('contextmenu', function(e) {
@@ -883,166 +736,16 @@
                     // Cegah Ctrl+W, Ctrl+F4, Alt+F4, dll.
                     if ((e.ctrlKey && e.key === 'w') || 
                         (e.ctrlKey && e.key === 'F4') || 
-                        (e.altKey && e.key === 'F4') ||
-                        (e.metaKey && e.key === 'w')) {
-                        e.preventDefault();
-                        antiCloseModal.style.display = 'flex';
-                    }
-                    
-                    // Cegah F5 (refresh)
-                    if (e.key === 'F5') {
-                        e.preventDefault();
-                        antiCloseModal.style.display = 'flex';
-                    }
-                    
-                    // Cegah Ctrl+R (refresh)
-                    if (e.ctrlKey && e.key === 'r') {
-                        e.preventDefault();
-                        antiCloseModal.style.display = 'flex';
-                    }
-                    
-                    // Cegah Ctrl+Shift+R (hard refresh)
-                    if (e.ctrlKey && e.shiftKey && e.key === 'R') {
-                        e.preventDefault();
-                        antiCloseModal.style.display = 'flex';
-                    }
-                    
-                    // Cegah Alt+Tab (mungkin tidak berfungsi di semua browser)
-                    if (e.altKey && e.key === 'Tab') {
-                        e.preventDefault();
-                        antiCloseModal.style.display = 'flex';
-                    }
-                    
-                    // Cegah Escape
-                    if (e.key === 'Escape') {
+                        (e.altKey && e.key === 'F4')) {
                         e.preventDefault();
                         antiCloseModal.style.display = 'flex';
                     }
                 }
             });
-            
-            // Cegah klik kanan pada gambar
-            document.addEventListener('dragstart', function(e) {
-                if (prankActive && e.target.tagName === 'IMG') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Cegah select text
-            document.addEventListener('selectstart', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Cegah copy
-            document.addEventListener('copy', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Cegah cut
-            document.addEventListener('cut', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Cegah paste
-            document.addEventListener('paste', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Cegah back button
-            window.addEventListener('popstate', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    history.pushState(null, null, window.location.href);
-                    antiCloseModal.style.display = 'flex';
-                }
-            });
-            
-            // Cegah visibility change (tab switching)
-            document.addEventListener('visibilitychange', function() {
-                if (prankActive && document.hidden) {
-                    // Tampilkan modal ketika user mencoba beralih tab
-                    setTimeout(() => {
-                        antiCloseModal.style.display = 'flex';
-                    }, 100);
-                }
-            });
-            
-            // Cegah mouse leave (mungkin tidak berfungsi di semua browser)
-            document.addEventListener('mouseleave', function(e) {
-                if (prankActive && e.clientY <= 0) {
-                    // Tampilkan modal ketika mouse meninggalkan jendela
-                    setTimeout(() => {
-                        antiCloseModal.style.display = 'flex';
-                    }, 100);
-                }
-            });
-            
-            // Cegah window blur (fokus berpindah dari jendela)
-            window.addEventListener('blur', function() {
-                if (prankActive) {
-                    // Tampilkan modal ketika jendela kehilangan fokus
-                    setTimeout(() => {
-                        antiCloseModal.style.display = 'flex';
-                    }, 100);
-                }
-            });
-            
-            // Cegah window focus (untuk memastikan jendela tetap aktif)
-            window.addEventListener('focus', function() {
-                if (prankActive) {
-                    // Pastikan jendela tetap di depan
-                    window.focus();
-                }
-            });
-            
-            // Cegah resize window
-            window.addEventListener('resize', function() {
-                if (prankActive) {
-                    // Kembalikan ukuran jendela ke ukuran sebelumnya
-                    setTimeout(() => {
-                        window.resizeTo(window.outerWidth, window.outerHeight);
-                    }, 100);
-                }
-            });
-            
-            // Cegah scroll
-            document.addEventListener('wheel', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            }, { passive: false });
-            
-            // Cegah touch move (untuk perangkat mobile)
-            document.addEventListener('touchmove', function(e) {
-                if (prankActive) {
-                    e.preventDefault();
-                    return false;
-                }
-            }, { passive: false });
         }
         
         // Inisialisasi fitur anti close
         setupAntiClose();
-        
-        // Buat partikel saat halaman dimuat
-        createParticles();
-        
-        // Cegah back button dengan history manipulation
-        history.pushState(null, null, window.location.href);
     </script>
 </body>
 </html>
